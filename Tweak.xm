@@ -53,21 +53,21 @@ static UIWebDocumentView *webDocumentView;
 %new(v@:@)
 - (void)leftSwipeShiftCaret:(UISwipeGestureRecognizer *)sender
 {
-  if ([webDocumentView characterBeforeCaretSelection] == 0)
-    return;
-  UITextPosition *leftShitedPosition = [webDocumentView positionFromPosition:webDocumentView.selectedTextRange.start inDirection:UITextLayoutDirectionLeft offset:1];
-  UITextRange *range = [webDocumentView textRangeFromPosition:leftShitedPosition toPosition:leftShitedPosition];
-  [webDocumentView setSelectedTextRange:range];
+  if ([webDocumentView characterBeforeCaretSelection] != 0) {
+    UITextPosition *leftShitedPosition = [webDocumentView positionFromPosition:webDocumentView.selectedTextRange.start inDirection:UITextLayoutDirectionLeft offset:1];
+    UITextRange *range = [webDocumentView textRangeFromPosition:leftShitedPosition toPosition:leftShitedPosition];
+    [webDocumentView setSelectedTextRange:range];
+  }
 }
 
 %new(v@:@)
 - (void)rightSwipeShiftCaret:(UISwipeGestureRecognizer *)sender
 {
-  if ([webDocumentView characterAfterCaretSelection] == 0)
-    return;
-  UITextPosition *rightShiftedPosition = [webDocumentView positionFromPosition:webDocumentView.selectedTextRange.end inDirection:UITextLayoutDirectionRight offset:1];
-  UITextRange *range = [webDocumentView textRangeFromPosition:rightShiftedPosition toPosition:rightShiftedPosition];
-  [webDocumentView setSelectedTextRange:range];
+  if ([webDocumentView characterAfterCaretSelection] != 0) {
+    UITextPosition *rightShiftedPosition = [webDocumentView positionFromPosition:webDocumentView.selectedTextRange.end inDirection:UITextLayoutDirectionRight offset:1];
+    UITextRange *range = [webDocumentView textRangeFromPosition:rightShiftedPosition toPosition:rightShiftedPosition];
+    [webDocumentView setSelectedTextRange:range];
+  }
 }
 %end
 
@@ -86,19 +86,19 @@ static UITextContentView *contentView;
 %new(v@:@)
 - (void)leftSwipeShiftCaret:(UISwipeGestureRecognizer *)sender
 {
-  NSUInteger offset = OffsetFromBeginningOfDocument(contentView, YES);
-  if ([contentView comparePosition:contentView.selectedTextRange.start toPosition:contentView.beginningOfDocument] == NSOrderedSame)
-    return;
-  [contentView setSelectedRange:NSMakeRange(--offset,0)];
+  if (![contentView comparePosition:contentView.selectedTextRange.start toPosition:contentView.beginningOfDocument] == NSOrderedSame) {
+    NSUInteger offset = OffsetFromBeginningOfDocument(contentView, YES);
+    [contentView setSelectedRange:NSMakeRange(--offset,0)];
+  }
 }
 
 %new(v@:@)
 - (void)rightSwipeShiftCaret:(UISwipeGestureRecognizer *)sender
 {
-  NSUInteger offset = OffsetFromBeginningOfDocument(contentView, NO);
-  if ([contentView comparePosition:contentView.selectedTextRange.end toPosition:contentView.endOfDocument] == NSOrderedSame)
-    return;
-  [contentView setSelectedRange:NSMakeRange(++offset,0)];
+  if (![contentView comparePosition:contentView.selectedTextRange.end toPosition:contentView.endOfDocument] == NSOrderedSame) {
+    NSUInteger offset = OffsetFromBeginningOfDocument(contentView, NO);
+    [contentView setSelectedRange:NSMakeRange(++offset,0)];
+  }
 }
 %end
 
@@ -117,19 +117,19 @@ static UITextField *textField;
 %new(v@:@)
 - (void)leftSwipeShiftCaret:(UISwipeGestureRecognizer *)sender
 {
-  NSUInteger offset = OffsetFromBeginningOfDocument(textField, YES);
-  if ([textField comparePosition:textField.selectedTextRange.start toPosition:textField.beginningOfDocument] == NSOrderedSame)
-    return;
-  [textField setSelectionRange:NSMakeRange(--offset,0)];
+  if (![textField comparePosition:textField.selectedTextRange.start toPosition:textField.beginningOfDocument] == NSOrderedSame) {
+    NSUInteger offset = OffsetFromBeginningOfDocument(textField, YES);
+    [textField setSelectionRange:NSMakeRange(--offset,0)];
+  }
 }
 
 %new(v@:@)
 - (void)rightSwipeShiftCaret:(UISwipeGestureRecognizer *)sender
 {
-  NSUInteger offset = OffsetFromBeginningOfDocument(textField, NO);
-  if ([textField comparePosition:textField.selectedTextRange.end toPosition:textField.endOfDocument] == NSOrderedSame)
-    return;
-  [textField setSelectionRange:NSMakeRange(++offset,0)];
+  if (![textField comparePosition:textField.selectedTextRange.end toPosition:textField.endOfDocument] == NSOrderedSame) {
+    NSUInteger offset = OffsetFromBeginningOfDocument(textField, NO);
+    [textField setSelectionRange:NSMakeRange(++offset,0)];
+  }
 }
 %end
 
@@ -148,18 +148,18 @@ static UITextView *textView;
 %new(v@:@)
 - (void)leftSwipeShiftCaret:(UISwipeGestureRecognizer *)sender
 {
-  NSUInteger offset = OffsetFromBeginningOfDocument(textView, YES);
-  if ([textView comparePosition:textView.selectedTextRange.start toPosition:textView.beginningOfDocument] == NSOrderedSame)
-    return;
-  [textView setSelectedRange:NSMakeRange(--offset,0)];
+  if (![textView comparePosition:textView.selectedTextRange.start toPosition:textView.beginningOfDocument] == NSOrderedSame) {
+    NSUInteger offset = OffsetFromBeginningOfDocument(textView, YES);
+    [textView setSelectedRange:NSMakeRange(--offset,0)];
+  }
 }
 
 %new(v@:@)
 - (void)rightSwipeShiftCaret:(UISwipeGestureRecognizer *)sender
 {
-  NSUInteger offset = OffsetFromBeginningOfDocument(textView, NO);
-  if ([textView comparePosition:textView.selectedTextRange.end toPosition:textView.endOfDocument] == NSOrderedSame)
-    return;
-  [textView setSelectedRange:NSMakeRange(++offset,0)];
+  if (![textView comparePosition:textView.selectedTextRange.end toPosition:textView.endOfDocument] == NSOrderedSame) {
+    NSUInteger offset = OffsetFromBeginningOfDocument(textView, NO);
+    [textView setSelectedRange:NSMakeRange(++offset,0)];
+  }
 }
 %end
