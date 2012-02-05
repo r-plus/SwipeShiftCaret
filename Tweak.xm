@@ -43,8 +43,10 @@ static UIWebDocumentView *webDocumentView;
 %hook UIWebDocumentView
 - (BOOL)becomeFirstResponder
 {
-  webDocumentView = self;
-  InstallSwipeGestureRecognizer(self);
+  if (![[[NSBundle mainBundle] bundleIdentifier] isEqualToString:@"com.apple.mobilesafari"]) {
+    webDocumentView = self;
+    InstallSwipeGestureRecognizer(self);
+  }
   return %orig;
 }
 
