@@ -53,13 +53,28 @@ static void ShiftCaret(id<UITextInput> self, BOOL isLeftSwipe)
 // UIWebDocumentView
 /////////////////////////////////////////////////////////////////////////////
 
+// NOTE: special handling for MobileSafari + Sleipnizer's L/R Gestures.
+%hook BrowserController
+-(void)_keyboardWillHide:(id)_keyboard
+{
+  %orig;
+
+  for (UISwipeGestureRecognizer *gesture in [[self activeWebView] gestureRecognizers]) {
+    if ([gesture isMemberOfClass:[UISwipeGestureRecognizer class]]) {
+      NSArray *targets = MSHookIvar<NSArray *>(gesture, "_targets");
+      SEL action = MSHookIvar<SEL>([targets objectAtIndex:0], "_action");
+      if (@selector(leftSwipeShiftCaret:) == action || @selector(rightSwipeShiftCaret:) == action)
+        [[self activeWebView] removeGestureRecognizer:gesture];
+    }
+  }
+}
+%end
+
 %hook UIWebDocumentView
 - (BOOL)becomeFirstResponder
 {
-  if (![[[NSBundle mainBundle] bundleIdentifier] isEqualToString:@"com.apple.mobilesafari"]) {
-    tv = self;
-    InstallSwipeGestureRecognizer(self);
-  }
+  tv = self;
+  InstallSwipeGestureRecognizer(self);
   return %orig;
 }
 
