@@ -9,4 +9,4 @@ Still not support IME candidate caret position.
 
 ![](http://dl.dropbox.com/u/149268/swipeshiftcaret_a_GIFSoup.com.gif)
 ##License
-GPLv3
+ISC License
