@@ -103,6 +103,9 @@ static void ShiftCaret(id<UITextInput> self, BOOL isLeftSwipe)
 // UITextContentView
 /////////////////////////////////////////////////////////////////////////////
 
+// NOTE: MobileSMS.app's textview class is this.
+//       But not shift the caret... why?
+//       and not detect swipe gesture.
 %hook UITextContentView
 - (BOOL)becomeFirstResponder
 {
