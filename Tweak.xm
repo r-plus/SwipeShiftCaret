@@ -29,6 +29,10 @@ static id<UITextInput, DummyForUIWebDocumentViewMethod> tv;
 @interface UITextView (Private) <DummyForUIWebDocumentViewMethod>
 @end
 
+@interface BrowserController : NSObject
+- (UIWebDocumentView *)activeWebView;
+@end
+
 static void InstallSwipeGestureRecognizer(id self)
 {
   UISwipeGestureRecognizer *rightSwipeShiftCaret = [[UISwipeGestureRecognizer alloc] initWithTarget:self action:@selector(rightSwipeShiftCaret:)];
