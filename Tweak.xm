@@ -4,15 +4,16 @@
 
 #define LEFT_SWIPE_SHIFT_CARET \
   if (![tv comparePosition:tv.selectedTextRange.start toPosition:tv.beginningOfDocument] == NSOrderedSame) \
-    ShiftCaret(tv, YES)
+    ShiftCaret(YES)
 
 #define RIGHT_SWIPE_SHIFTCARET \
   if (![tv comparePosition:tv.selectedTextRange.end toPosition:tv.endOfDocument] == NSOrderedSame) \
-    ShiftCaret(tv, NO)
+    ShiftCaret(NO)
 
 @protocol DummyForUIWebDocumentViewMethod
 - (unsigned short)characterBeforeCaretSelection;
 - (unsigned short)characterAfterCaretSelection;
+- (void)addGestureRecognizer:(UIGestureRecognizer *)gesture;
 @end
 
 static id<UITextInput, DummyForUIWebDocumentViewMethod> tv;
@@ -33,25 +34,25 @@ static id<UITextInput, DummyForUIWebDocumentViewMethod> tv;
 - (UIWebDocumentView *)activeWebView;
 @end
 
-static void InstallSwipeGestureRecognizer(id self)
+static void InstallSwipeGestureRecognizer()
 {
-  UISwipeGestureRecognizer *rightSwipeShiftCaret = [[UISwipeGestureRecognizer alloc] initWithTarget:self action:@selector(rightSwipeShiftCaret:)];
+  UISwipeGestureRecognizer *rightSwipeShiftCaret = [[UISwipeGestureRecognizer alloc] initWithTarget:tv action:@selector(rightSwipeShiftCaret:)];
   rightSwipeShiftCaret.direction = UISwipeGestureRecognizerDirectionRight;
-  [self addGestureRecognizer:rightSwipeShiftCaret];
+  [tv addGestureRecognizer:rightSwipeShiftCaret];
   [rightSwipeShiftCaret release];
 
-  UISwipeGestureRecognizer *leftSwipeShiftCaret = [[UISwipeGestureRecognizer alloc] initWithTarget:self action:@selector(leftSwipeShiftCaret:)];
+  UISwipeGestureRecognizer *leftSwipeShiftCaret = [[UISwipeGestureRecognizer alloc] initWithTarget:tv action:@selector(leftSwipeShiftCaret:)];
   leftSwipeShiftCaret.direction = UISwipeGestureRecognizerDirectionLeft;
-  [self addGestureRecognizer:leftSwipeShiftCaret];
+  [tv addGestureRecognizer:leftSwipeShiftCaret];
   [leftSwipeShiftCaret release];
 }
 
-static void ShiftCaret(id<UITextInput> self, BOOL isLeftSwipe)
+static void ShiftCaret(BOOL isLeftSwipe)
 {
-  UITextPosition *position = isLeftSwipe ? [self positionFromPosition:self.selectedTextRange.start inDirection:UITextLayoutDirectionLeft offset:1]
-    : [self positionFromPosition:self.selectedTextRange.end inDirection:UITextLayoutDirectionRight offset:1];
-  UITextRange *range = [self textRangeFromPosition:position toPosition:position];
-  [self setSelectedTextRange:range];
+  UITextPosition *position = isLeftSwipe ? [tv positionFromPosition:tv.selectedTextRange.start inDirection:UITextLayoutDirectionLeft offset:1]
+    : [tv positionFromPosition:tv.selectedTextRange.end inDirection:UITextLayoutDirectionRight offset:1];
+  UITextRange *range = [tv textRangeFromPosition:position toPosition:position];
+  [tv setSelectedTextRange:range];
 }
 
 // UIWebDocumentView
@@ -78,7 +79,7 @@ static void ShiftCaret(id<UITextInput> self, BOOL isLeftSwipe)
 - (BOOL)becomeFirstResponder
 {
   tv = self;
-  InstallSwipeGestureRecognizer(self);
+  InstallSwipeGestureRecognizer();
   return %orig;
 }
 
@@ -89,14 +90,14 @@ static void ShiftCaret(id<UITextInput> self, BOOL isLeftSwipe)
 - (void)leftSwipeShiftCaret:(UISwipeGestureRecognizer *)sender
 {
   if ([tv characterBeforeCaretSelection] != 0)
-    ShiftCaret(tv, YES);
+    ShiftCaret(YES);
 }
 
 %new(v@:@)
 - (void)rightSwipeShiftCaret:(UISwipeGestureRecognizer *)sender
 {
   if ([tv characterAfterCaretSelection] != 0)
-    ShiftCaret(tv, NO);
+    ShiftCaret(NO);
 }
 %end
 
@@ -110,7 +111,7 @@ static void ShiftCaret(id<UITextInput> self, BOOL isLeftSwipe)
 - (BOOL)becomeFirstResponder
 {
   tv = self;
-  InstallSwipeGestureRecognizer(self);
+  InstallSwipeGestureRecognizer();
   return %orig;
 }
 
@@ -134,7 +135,7 @@ static void ShiftCaret(id<UITextInput> self, BOOL isLeftSwipe)
 - (void)_becomeFirstResponder
 {
   tv = self;
-  InstallSwipeGestureRecognizer(self);
+  InstallSwipeGestureRecognizer();
   return %orig;
 }
 
@@ -158,7 +159,7 @@ static void ShiftCaret(id<UITextInput> self, BOOL isLeftSwipe)
 - (BOOL)becomeFirstResponder
 {
   tv = self;
-  InstallSwipeGestureRecognizer(self);
+  InstallSwipeGestureRecognizer();
   return %orig;
 }
 
