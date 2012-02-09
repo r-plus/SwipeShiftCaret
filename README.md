@@ -5,6 +5,8 @@ Caret micromanager shift the caret for most text inputable view via swipe.
 
 ![](http://dl.dropbox.com/u/149268/swipeshiftcaret_a_GIFSoup.com.gif)
 
+###master branch dont support selected state moving.
+
 ###Still not supports
 
 * original class view (e.g. Evernote, SMS etc.)
