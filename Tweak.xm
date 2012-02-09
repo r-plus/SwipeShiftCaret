@@ -2,15 +2,12 @@
 //       Hooked classes are applied UITextInput protocol since iOS5 except UIWebDocumentView.
 //       So this tweak depend iOS 5+.
 
-static UIResponder <UITextInput> *tv;
+static UIResponder *tv;
 
 @interface UIResponder (Private) <UITextInput>
 - (unsigned long)_characterBeforeCaretSelection;
 - (unsigned long)_characterAfterCaretSelection;
-- (unsigned short)characterBeforeCaretSelection;
-- (unsigned short)characterAfterCaretSelection;
 - (void)addGestureRecognizer:(UIGestureRecognizer *)gesture;
-- (BOOL)_isEmptySelection;
 @end
 
 @interface BrowserController : NSObject
@@ -51,36 +48,15 @@ static void ShiftCaret(BOOL isLeftSwipe)
 %new(v@:)
 - (void)leftSwipeShiftCaret:(UISwipeGestureRecognizer *)sender
 {
-  // NOTE: If selected state, _character*CaretSelection return 0.
-  //       this opinion is to move caret from selected state.
-  if ([tv _isEmptySelection]) {
-    if ([tv _characterBeforeCaretSelection] == 0)
-      return;
-  } else {
-    if ([tv comparePosition:tv.selectedTextRange.start toPosition:tv.beginningOfDocument] == NSOrderedSame)
-      return;
-    // NOTE: failsafe for UIWebDocumentView
-    if ([tv respondsToSelector:@selector(characterBeforeCaretSelection)])
-      if ([tv characterBeforeCaretSelection] == 0)
-        return;
-  }
-  ShiftCaret(YES);
+  if ([tv _characterBeforeCaretSelection] != 0)
+    ShiftCaret(YES);
 }
 
 %new(v@:@)
 - (void)rightSwipeShiftCaret:(UISwipeGestureRecognizer *)sender
 {
-  if ([tv _isEmptySelection]) {
-    if ([tv _characterAfterCaretSelection] == 0)
-      return;
-  } else {
-    if ([tv comparePosition:tv.selectedTextRange.end toPosition:tv.endOfDocument] == NSOrderedSame)
-      return;
-    if ([tv respondsToSelector:@selector(characterAfterCaretSelection)])
-      if ([tv characterAfterCaretSelection] == 0)
-        return;
-  }
-  ShiftCaret(NO);
+  if ([tv _characterAfterCaretSelection] != 0)
+    ShiftCaret(NO);
 }
 %end
 
