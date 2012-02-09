@@ -2,32 +2,15 @@
 //       Hooked classes are applied UITextInput protocol since iOS5 except UIWebDocumentView.
 //       So this tweak depend iOS 5+.
 
-#define LEFT_SWIPE_SHIFT_CARET \
-  if (![tv comparePosition:tv.selectedTextRange.start toPosition:tv.beginningOfDocument] == NSOrderedSame) \
-    ShiftCaret(YES)
+static UIResponder <UITextInput> *tv;
 
-#define RIGHT_SWIPE_SHIFTCARET \
-  if (![tv comparePosition:tv.selectedTextRange.end toPosition:tv.endOfDocument] == NSOrderedSame) \
-    ShiftCaret(NO)
-
-@protocol DummyForUIWebDocumentViewMethod
+@interface UIResponder (Private) <UITextInput>
+- (unsigned long)_characterBeforeCaretSelection;
+- (unsigned long)_characterAfterCaretSelection;
 - (unsigned short)characterBeforeCaretSelection;
 - (unsigned short)characterAfterCaretSelection;
 - (void)addGestureRecognizer:(UIGestureRecognizer *)gesture;
-@end
-
-static id<UITextInput, DummyForUIWebDocumentViewMethod> tv;
-
-@interface UIWebDocumentView : UIView <UITextInput, DummyForUIWebDocumentViewMethod>
-@end
-
-@interface UITextContentView : UIView <UITextInput, DummyForUIWebDocumentViewMethod>
-@end
-
-@interface UITextField (Private) <DummyForUIWebDocumentViewMethod>
-@end
-
-@interface UITextView (Private) <DummyForUIWebDocumentViewMethod>
+- (BOOL)_isEmptySelection;
 @end
 
 @interface BrowserController : NSObject
@@ -55,8 +38,51 @@ static void ShiftCaret(BOOL isLeftSwipe)
   [tv setSelectedTextRange:range];
 }
 
-// UIWebDocumentView
-/////////////////////////////////////////////////////////////////////////////
+%hook UIResponder
+- (BOOL)becomeFirstResponder
+{
+  if ([self respondsToSelector:@selector(setSelectedTextRange:)]) {
+    tv = self;
+    InstallSwipeGestureRecognizer();
+  }
+  return %orig;
+}
+
+%new(v@:)
+- (void)leftSwipeShiftCaret:(UISwipeGestureRecognizer *)sender
+{
+  // NOTE: If selected state, _character*CaretSelection return 0.
+  //       this opinion is to move caret from selected state.
+  if ([tv _isEmptySelection]) {
+    if ([tv _characterBeforeCaretSelection] == 0)
+      return;
+  } else {
+    if ([tv comparePosition:tv.selectedTextRange.start toPosition:tv.beginningOfDocument] == NSOrderedSame)
+      return;
+    // NOTE: failsafe for UIWebDocumentView
+    if ([tv respondsToSelector:@selector(characterBeforeCaretSelection)])
+      if ([tv characterBeforeCaretSelection] == 0)
+        return;
+  }
+  ShiftCaret(YES);
+}
+
+%new(v@:@)
+- (void)rightSwipeShiftCaret:(UISwipeGestureRecognizer *)sender
+{
+  if ([tv _isEmptySelection]) {
+    if ([tv _characterAfterCaretSelection] == 0)
+      return;
+  } else {
+    if ([tv comparePosition:tv.selectedTextRange.end toPosition:tv.endOfDocument] == NSOrderedSame)
+      return;
+    if ([tv respondsToSelector:@selector(characterAfterCaretSelection)])
+      if ([tv characterAfterCaretSelection] == 0)
+        return;
+  }
+  ShiftCaret(NO);
+}
+%end
 
 // NOTE: special handling for MobileSafari + Sleipnizer's L/R Gestures.
 %hook BrowserController
@@ -72,106 +98,5 @@ static void ShiftCaret(BOOL isLeftSwipe)
         [[self activeWebView] removeGestureRecognizer:gesture];
     }
   }
-}
-%end
-
-%hook UIWebDocumentView
-- (BOOL)becomeFirstResponder
-{
-  tv = self;
-  InstallSwipeGestureRecognizer();
-  return %orig;
-}
-
-// TODO: failsafe apply same with others.
-//       @selector(comparePosition:toPosition:) is already implemented
-//       but not return NSOrderedSame on GMail.app
-%new(v@:@)
-- (void)leftSwipeShiftCaret:(UISwipeGestureRecognizer *)sender
-{
-  if ([tv characterBeforeCaretSelection] != 0)
-    ShiftCaret(YES);
-}
-
-%new(v@:@)
-- (void)rightSwipeShiftCaret:(UISwipeGestureRecognizer *)sender
-{
-  if ([tv characterAfterCaretSelection] != 0)
-    ShiftCaret(NO);
-}
-%end
-
-// UITextContentView
-/////////////////////////////////////////////////////////////////////////////
-
-// NOTE: MobileSMS.app's textview class is this.
-//       But not shift the caret... why?
-//       and not detect swipe gesture.
-%hook UITextContentView
-- (BOOL)becomeFirstResponder
-{
-  tv = self;
-  InstallSwipeGestureRecognizer();
-  return %orig;
-}
-
-%new(v@:@)
-- (void)leftSwipeShiftCaret:(UISwipeGestureRecognizer *)sender
-{
-  LEFT_SWIPE_SHIFT_CARET;
-}
-
-%new(v@:@)
-- (void)rightSwipeShiftCaret:(UISwipeGestureRecognizer *)sender
-{
-  RIGHT_SWIPE_SHIFTCARET;
-}
-%end
-
-// UITextField
-/////////////////////////////////////////////////////////////////////////////
-
-%hook UITextField
-- (void)_becomeFirstResponder
-{
-  tv = self;
-  InstallSwipeGestureRecognizer();
-  return %orig;
-}
-
-%new(v@:@)
-- (void)leftSwipeShiftCaret:(UISwipeGestureRecognizer *)sender
-{
-  LEFT_SWIPE_SHIFT_CARET;
-}
-
-%new(v@:@)
-- (void)rightSwipeShiftCaret:(UISwipeGestureRecognizer *)sender
-{
-  RIGHT_SWIPE_SHIFTCARET;
-}
-%end
-
-// UITextView
-/////////////////////////////////////////////////////////////////////////////
-
-%hook UITextView
-- (BOOL)becomeFirstResponder
-{
-  tv = self;
-  InstallSwipeGestureRecognizer();
-  return %orig;
-}
-
-%new(v@:@)
-- (void)leftSwipeShiftCaret:(UISwipeGestureRecognizer *)sender
-{
-  LEFT_SWIPE_SHIFT_CARET;
-}
-
-%new(v@:@)
-- (void)rightSwipeShiftCaret:(UISwipeGestureRecognizer *)sender
-{
-  RIGHT_SWIPE_SHIFTCARET;
 }
 %end
