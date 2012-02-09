@@ -1,17 +1,9 @@
-// NOTE: This tweak using property and method of UITextInput protocol.
-//       Hooked classes are applied UITextInput protocol since iOS5 except UIWebDocumentView.
-//       So this tweak depend iOS 5+.
-
 static UIResponder *tv;
 
 @interface UIResponder (Private) <UITextInput>
 - (unsigned long)_characterBeforeCaretSelection;
 - (unsigned long)_characterAfterCaretSelection;
 - (void)addGestureRecognizer:(UIGestureRecognizer *)gesture;
-@end
-
-@interface BrowserController : NSObject
-- (UIWebDocumentView *)activeWebView;
 @end
 
 static void InstallSwipeGestureRecognizer()
@@ -45,7 +37,7 @@ static void ShiftCaret(BOOL isLeftSwipe)
   return %orig;
 }
 
-%new(v@:)
+%new(v@:@)
 - (void)leftSwipeShiftCaret:(UISwipeGestureRecognizer *)sender
 {
   if ([tv _characterBeforeCaretSelection] != 0)
@@ -59,6 +51,10 @@ static void ShiftCaret(BOOL isLeftSwipe)
     ShiftCaret(NO);
 }
 %end
+
+@interface BrowserController : NSObject
+- (UIWebDocumentView *)activeWebView;
+@end
 
 // NOTE: special handling for MobileSafari + Sleipnizer's L/R Gestures.
 %hook BrowserController
