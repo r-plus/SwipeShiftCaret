@@ -3,8 +3,6 @@ static BOOL keyboardIsAppearing = NO;
 static BOOL observerRegistered = NO;
 
 @interface UIResponder (Private) <UITextInput>
-- (unsigned long)_characterBeforeCaretSelection;
-- (unsigned long)_characterAfterCaretSelection;
 - (void)addGestureRecognizer:(UIGestureRecognizer *)gesture;
 - (void)removeGestureRecognizer:(UIGestureRecognizer *)gesture;
 - (NSArray *)gestureRecognizers;
@@ -27,6 +25,9 @@ static void ShiftCaret(BOOL isLeftSwipe)
 {
   UITextPosition *position = isLeftSwipe ? [tv positionFromPosition:tv.selectedTextRange.start inDirection:UITextLayoutDirectionLeft offset:1]
     : [tv positionFromPosition:tv.selectedTextRange.end inDirection:UITextLayoutDirectionRight offset:1];
+  // failsafe for over edge position crash.
+  if (!position)
+    return;
   UITextRange *range = [tv textRangeFromPosition:position toPosition:position];
   [tv setSelectedTextRange:range];
 }
@@ -52,15 +53,13 @@ static void ShiftCaret(BOOL isLeftSwipe)
 %new(v@:@)
 - (void)leftSwipeShiftCaret:(UISwipeGestureRecognizer *)sender
 {
-  if ([tv _characterBeforeCaretSelection] != 0)
-    ShiftCaret(YES);
+  ShiftCaret(YES);
 }
 
 %new(v@:@)
 - (void)rightSwipeShiftCaret:(UISwipeGestureRecognizer *)sender
 {
-  if ([tv _characterAfterCaretSelection] != 0)
-    ShiftCaret(NO);
+  ShiftCaret(NO);
 }
 
 %new(v@:@)
