@@ -3,10 +3,13 @@ Name: SwipeShiftCaret
 Depends: mobilesubstrate, firmware (>= 5.0)
 Version: 0.2.3
 Architecture: iphoneos-arm
-Description: Caret micromanager via swipe
+Description: caret micromanager via swipes
 Maintainer: BigBoss <bigboss@thebigboss.org>
 Author: r_plus <anasthasia.r+swipeshiftcaret@gmail.com>
 Section: Tweaks
 dev: rplus
 Priority: optional
 Tag: purpose::extension
+Homepage: http://moreinfo.thebigboss.org/moreinfo/depiction.php?file=swipeshiftcaretDp
+Depiction: http://moreinfo.thebigboss.org/moreinfo/depiction.php?file=swipeshiftcaretDp
+Sponsor: thebigboss.org <http://thebigboss.org>
