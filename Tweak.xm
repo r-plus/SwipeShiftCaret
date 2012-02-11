@@ -75,6 +75,13 @@ static void ShiftCaret(BOOL isLeftSwipe)
 {
   keyboardIsAppearing = NO;
 
+  if (observerRegistered && ![[[NSBundle mainBundle] bundleIdentifier] isEqualToString:@"com.google.Gmail"]) {
+    NSNotificationCenter *center = [NSNotificationCenter defaultCenter];
+    [center removeObserver:self name:UIKeyboardWillShowNotification object:nil];
+    [center removeObserver:self name:UIKeyboardWillHideNotification object:nil];
+    observerRegistered = NO;
+  }
+
   for (UISwipeGestureRecognizer *gesture in [tv gestureRecognizers]) {
     if ([gesture isMemberOfClass:[UISwipeGestureRecognizer class]]) {
       NSArray *targets = MSHookIvar<NSArray *>(gesture, "_targets");
