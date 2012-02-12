@@ -1,11 +1,8 @@
-static UIResponder *tv;
+static UIView *tv;
 static BOOL keyboardIsAppearing = NO;
 static BOOL observerRegistered = NO;
 
-@interface UIResponder (Private) <UITextInput>
-- (void)addGestureRecognizer:(UIGestureRecognizer *)gesture;
-- (void)removeGestureRecognizer:(UIGestureRecognizer *)gesture;
-- (NSArray *)gestureRecognizers;
+@interface UIView (Private) <UITextInput>
 @end
 
 static void InstallSwipeGestureRecognizer()
@@ -32,7 +29,7 @@ static void ShiftCaret(BOOL isLeftSwipe)
   [tv setSelectedTextRange:range];
 }
 
-%hook UIResponder
+%hook UIView
 - (BOOL)becomeFirstResponder
 {
   if ([self respondsToSelector:@selector(setSelectedTextRange:)]) {
