@@ -26,8 +26,9 @@ static inline int GetEditingTextViewsCount()
 {
   int count = 0;
   for (UIView *tv in [[textViews copy] autorelease])
-    if ([tv isEditable])
-      count++;
+    if ([tv respondsToSelector:@selector(isEditable)])
+      if ([tv isEditable])
+        count++;
   return count;
 }
 
