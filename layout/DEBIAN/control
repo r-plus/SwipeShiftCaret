@@ -1,7 +1,7 @@
 Package: jp.r-plus.swipeshiftcaret
 Name: SwipeShiftCaret
-Depends: mobilesubstrate, firmware (>= 5.0)
-Version: 0.2.5
+Depends: mobilesubstrate, libactivator, firmware (>= 5.0)
+Version: 0.3
 Architecture: iphoneos-arm
 Description: caret micromanager via swipes
 Maintainer: BigBoss <bigboss@thebigboss.org>
