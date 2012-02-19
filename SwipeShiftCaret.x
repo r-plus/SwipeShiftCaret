@@ -35,15 +35,17 @@ static inline int GetEditingTextViewsCount()
 static void InstallSwipeGestureRecognizer()
 {
   for (UIView *tv in [[textViews copy] autorelease]) {
-    UISwipeGestureRecognizer *rightSwipeShiftCaret = [[UISwipeGestureRecognizer alloc] initWithTarget:tv action:@selector(rightSwipeShiftCaret:)];
-    rightSwipeShiftCaret.direction = UISwipeGestureRecognizerDirectionRight;
-    [tv addGestureRecognizer:rightSwipeShiftCaret];
-    [rightSwipeShiftCaret release];
+    if ([tv isKindOfClass:[UIView class]]) {
+      UISwipeGestureRecognizer *rightSwipeShiftCaret = [[UISwipeGestureRecognizer alloc] initWithTarget:tv action:@selector(rightSwipeShiftCaret:)];
+      rightSwipeShiftCaret.direction = UISwipeGestureRecognizerDirectionRight;
+      [tv addGestureRecognizer:rightSwipeShiftCaret];
+      [rightSwipeShiftCaret release];
 
-    UISwipeGestureRecognizer *leftSwipeShiftCaret = [[UISwipeGestureRecognizer alloc] initWithTarget:tv action:@selector(leftSwipeShiftCaret:)];
-    leftSwipeShiftCaret.direction = UISwipeGestureRecognizerDirectionLeft;
-    [tv addGestureRecognizer:leftSwipeShiftCaret];
-    [leftSwipeShiftCaret release];
+      UISwipeGestureRecognizer *leftSwipeShiftCaret = [[UISwipeGestureRecognizer alloc] initWithTarget:tv action:@selector(leftSwipeShiftCaret:)];
+      leftSwipeShiftCaret.direction = UISwipeGestureRecognizerDirectionLeft;
+      [tv addGestureRecognizer:leftSwipeShiftCaret];
+      [leftSwipeShiftCaret release];
+    }
   }
 }
 
@@ -76,27 +78,30 @@ static void RightShiftCaretNotificationReceived(CFNotificationCenterRef center, 
 static void KeyboardWillShowNotificationReceived(CFNotificationCenterRef center, void *observer, CFStringRef name, const void *object, CFDictionaryRef userInfo)
 {
   keyboardIsAppearing = YES;
-  for (UIView *tv in [[textViews copy] autorelease])
+  if ([textViews count])
     InstallSwipeGestureRecognizer();
   notify_set_state(notifyToken, GetEditingTextViewsCount());
 }
 
 static void KeyboardWillHideNotificationReceived(CFNotificationCenterRef center, void *observer, CFStringRef name, const void *object, CFDictionaryRef userInfo)
 {
-  // remove gesture for Sleipnizer.
-  if (!orientationRotating && ![[[NSBundle mainBundle] bundleIdentifier] isEqualToString:@"com.google.Gmail"]) {
-    for (UIView *tv in [[textViews copy] autorelease]) {
-      for (UISwipeGestureRecognizer *gesture in [tv gestureRecognizers]) {
-        if ([gesture isMemberOfClass:[UISwipeGestureRecognizer class]]) {
-          NSArray *targets = CHIvar(gesture, _targets, NSArray *);
-          SEL action = CHIvar([targets objectAtIndex:0], _action, SEL);
-          if (@selector(leftSwipeShiftCaret:) == action || @selector(rightSwipeShiftCaret:) == action)
-            [tv removeGestureRecognizer:gesture];
+  NSString *identifier = [[NSBundle mainBundle] bundleIdentifier];
+  if (!orientationRotating && ![identifier isEqualToString:@"com.google.Gmail"]) {
+    // remove gesture for Sleipnizer.
+    if ([identifier isEqualToString:@"com.apple.mobilesafari"]) {
+      for (UIView *tv in [[textViews copy] autorelease]) {
+        for (UISwipeGestureRecognizer *gesture in [tv gestureRecognizers]) {
+          if ([gesture isMemberOfClass:[UISwipeGestureRecognizer class]]) {
+            NSArray *targets = CHIvar(gesture, _targets, NSArray *);
+            SEL action = CHIvar([targets objectAtIndex:0], _action, SEL);
+            if (@selector(leftSwipeShiftCaret:) == action || @selector(rightSwipeShiftCaret:) == action)
+              [tv removeGestureRecognizer:gesture];
+          }
         }
       }
     }
     // mobilesafari doesnt call becomeFirstResponder method after google search from webview.
-    if (![[[NSBundle mainBundle] bundleIdentifier] isEqualToString:@"com.apple.mobilesafari"]) {
+    if (![identifier isEqualToString:@"com.apple.mobilesafari"]) {
       [textViews removeAllObjects];
       notify_set_state(notifyToken, GetEditingTextViewsCount());
     }
