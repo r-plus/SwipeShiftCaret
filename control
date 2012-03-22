@@ -1,15 +1,12 @@
 Package: jp.r-plus.swipeshiftcaret
 Name: SimpleSwipeShiftCaret
 Depends: mobilesubstrate, firmware (>= 5.0)
-Version: 0.0.12
+Version: 1.0
 Architecture: iphoneos-arm
 Description: caret micromanager via swipes
-Maintainer: BigBoss <bigboss@thebigboss.org>
-Author: r_plus <anasthasia.r+swipeshiftcaret@gmail.com>
+Maintainer: r_plus <anasthasia.r+simpleswipeshiftcaret@gmail.com> 
+Author: r_plus <anasthasia.r+simpleswipeshiftcaret@gmail.com>
 Section: Tweaks
 dev: rplus
 Priority: optional
 Tag: purpose::extension
-Homepage: http://moreinfo.thebigboss.org/moreinfo/depiction.php?file=swipeshiftcaretDp
-Depiction: http://moreinfo.thebigboss.org/moreinfo/depiction.php?file=swipeshiftcaretDp
-Sponsor: thebigboss.org <http://thebigboss.org>
