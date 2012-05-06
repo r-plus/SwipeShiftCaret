@@ -20,8 +20,7 @@ static BOOL orientationRotating = NO;
 - (NSRange)selectedRange;
 - (NSRange)selectionRange;
 - (NSString *)text;
-//- (void)setSelectionRange:(NSRange)range;
-- (void)setSelection:(NSRange)range;
+- (void)setSelectionRange:(NSRange)range;
 - (void)setSelectedRange:(NSRange)range;
 @end
 
@@ -245,8 +244,8 @@ static void DidEnterBackgroundNotificationReceived(CFNotificationCenterRef cente
 
     for (UIView *tv in [[textViews copy] autorelease]) {
       // UITextField
-      if ([tv respondsToSelector:@selector(setSelection:)])
-        [tv setSelection:newRange];
+      if ([tv respondsToSelector:@selector(setSelectionRange:)])
+        [tv setSelectionRange:newRange];
       // UITextView, UITextContentView
       else if ([tv respondsToSelector:@selector(setSelectedRange:)])
         [tv setSelectedRange:newRange];
