@@ -32,10 +32,14 @@ static BOOL orientationRotating = NO;
 
 @implementation SCSwipeGestureRecognizer
 - (BOOL)canBePreventedByGestureRecognizer:(UIGestureRecognizer *)gesture {
+  if ([gesture isMemberOfClass:[SCSwipeGestureRecognizer class]])
+    return YES;
   return NO;
 }
 
 - (BOOL)canPreventGestureRecognizer:(UIGestureRecognizer *)gesture {
+  if ([gesture isMemberOfClass:[SCSwipeGestureRecognizer class]])
+    return YES;
   return NO;
 }
 @end
@@ -45,10 +49,14 @@ static BOOL orientationRotating = NO;
 
 @implementation SCPanGestureRecognizer
 - (BOOL)canBePreventedByGestureRecognizer:(UIGestureRecognizer *)gesture {
+  if ([gesture isMemberOfClass:[SCPanGestureRecognizer class]])
+    return YES;
   return NO;
 }
 
 - (BOOL)canPreventGestureRecognizer:(UIGestureRecognizer *)gesture {
+  if ([gesture isMemberOfClass:[SCPanGestureRecognizer class]])
+    return YES;
   return NO;
 }
 @end
@@ -132,19 +140,6 @@ static void KeyboardWillHideNotificationReceived(CFNotificationCenterRef center,
 {
   NSString *identifier = [[NSBundle mainBundle] bundleIdentifier];
   if (!orientationRotating && ![identifier isEqualToString:@"com.google.Gmail"]) {
-    // remove gesture for Sleipnizer.
-    if ([identifier isEqualToString:@"com.apple.mobilesafari"]) {
-      for (UIView *tv in [[textViews copy] autorelease]) {
-        for (UISwipeGestureRecognizer *gesture in [tv gestureRecognizers]) {
-          if ([gesture isMemberOfClass:[UISwipeGestureRecognizer class]]) {
-            NSArray *targets = CHIvar(gesture, _targets, NSArray *);
-            SEL action = CHIvar([targets objectAtIndex:0], _action, SEL);
-            if (@selector(leftSwipeShiftCaret:) == action || @selector(rightSwipeShiftCaret:) == action)
-              [tv removeGestureRecognizer:gesture];
-          }
-        }
-      }
-    }
     // mobilesafari doesnt call becomeFirstResponder method after google search from webview.
     if (![identifier isEqualToString:@"com.apple.mobilesafari"]) {
       [textViews removeAllObjects];
