@@ -27,6 +27,19 @@ static BOOL orientationRotating = NO;
 @interface ActShiftCaret : NSObject <LAListener>
 @end
 
+@interface SCSwipeGestureRecognizer : UISwipeGestureRecognizer
+@end
+
+@implementation SCSwipeGestureRecognizer
+- (BOOL)canBePreventedByGestureRecognizer:(UIGestureRecognizer *)gesture {
+  return NO;
+}
+
+- (BOOL)canPreventGestureRecognizer:(UIGestureRecognizer *)gesture {
+  return NO;
+}
+@end
+
 @interface SCPanGestureRecognizer : UIPanGestureRecognizer
 @end
 
@@ -54,12 +67,12 @@ static void InstallSwipeGestureRecognizer()
 {
   for (UIView *tv in [[textViews copy] autorelease]) {
     if ([tv isKindOfClass:[UIView class]]) {
-      UISwipeGestureRecognizer *rightSwipeShiftCaret = [[UISwipeGestureRecognizer alloc] initWithTarget:tv action:@selector(rightSwipeShiftCaret:)];
+      SCSwipeGestureRecognizer *rightSwipeShiftCaret = [[SCSwipeGestureRecognizer alloc] initWithTarget:tv action:@selector(rightSwipeShiftCaret:)];
       rightSwipeShiftCaret.direction = UISwipeGestureRecognizerDirectionRight;
       [tv addGestureRecognizer:rightSwipeShiftCaret];
       [rightSwipeShiftCaret release];
 
-      UISwipeGestureRecognizer *leftSwipeShiftCaret = [[UISwipeGestureRecognizer alloc] initWithTarget:tv action:@selector(leftSwipeShiftCaret:)];
+      SCSwipeGestureRecognizer *leftSwipeShiftCaret = [[SCSwipeGestureRecognizer alloc] initWithTarget:tv action:@selector(leftSwipeShiftCaret:)];
       leftSwipeShiftCaret.direction = UISwipeGestureRecognizerDirectionLeft;
       [tv addGestureRecognizer:leftSwipeShiftCaret];
       [leftSwipeShiftCaret release];
