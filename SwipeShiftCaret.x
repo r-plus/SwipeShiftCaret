@@ -12,7 +12,6 @@
 static NSMutableSet *textViews;
 static int notifyToken;
 static BOOL isActive;
-static BOOL keyboardIsAppearing = NO;
 static BOOL orientationRotating = NO;
 
 @interface UIView (Private) <UITextInput>
@@ -128,7 +127,6 @@ static void RightShiftCaretNotificationReceived(CFNotificationCenterRef center, 
 // NOTE: Keyboard Will/Did ShowNotification isnt call if iPad split keyboard.
 static void KeyboardWillShowNotificationReceived(CFNotificationCenterRef center, void *observer, CFStringRef name, const void *object, CFDictionaryRef userInfo)
 {
-  keyboardIsAppearing = YES;
   if ([textViews count]) {
     InstallPanGestureRecognizer();
     //InstallSwipeGestureRecognizer();
@@ -146,7 +144,6 @@ static void KeyboardWillHideNotificationReceived(CFNotificationCenterRef center,
       notify_set_state(notifyToken, GetEditingTextViewsCount());
     }
   }
-  keyboardIsAppearing = NO;
 }
 
 static void WillEnterForegroundNotificationReceived(CFNotificationCenterRef center, void *observer, CFStringRef name, const void *object, CFDictionaryRef userInfo)
@@ -181,11 +178,8 @@ static void DidEnterBackgroundNotificationReceived(CFNotificationCenterRef cente
   if (tmp && [self respondsToSelector:@selector(setSelectedTextRange:)]) {
     [textViews addObject:self];
     notify_set_state(notifyToken, GetEditingTextViewsCount());
-    // NOTE: this handling for compatible SwipeNav at Reeder (UIWebDocumentView).
-    if (keyboardIsAppearing) {
-      InstallPanGestureRecognizer();
-      //InstallSwipeGestureRecognizer();
-    }
+    InstallPanGestureRecognizer();
+    //InstallSwipeGestureRecognizer();
   }
   return tmp;
 }
