@@ -3,14 +3,27 @@ static UIView *tv;
 @interface UIView (Private) <UITextInput>
 @end
 
+@interface SCSwipeGestureRecognizer : UISwipeGestureRecognizer
+@end
+
+@implementation SCSwipeGestureRecognizer
+- (BOOL)canBePreventedByGestureRecognizer:(UIGestureRecognizer *)preventingGestureRecognizer {
+  return NO;
+}
+
+- (BOOL)canPreventGestureRecognizer:(UIGestureRecognizer *)preventedGestureRecognizer {
+  return NO;
+}
+@end
+
 static void InstallSwipeGestureRecognizer()
 {
-  UISwipeGestureRecognizer *rightSwipeShiftCaret = [[UISwipeGestureRecognizer alloc] initWithTarget:tv action:@selector(rightSwipeShiftCaret:)];
+  SCSwipeGestureRecognizer *rightSwipeShiftCaret = [[SCSwipeGestureRecognizer alloc] initWithTarget:tv action:@selector(rightSwipeShiftCaret:)];
   rightSwipeShiftCaret.direction = UISwipeGestureRecognizerDirectionRight;
   [tv addGestureRecognizer:rightSwipeShiftCaret];
   [rightSwipeShiftCaret release];
 
-  UISwipeGestureRecognizer *leftSwipeShiftCaret = [[UISwipeGestureRecognizer alloc] initWithTarget:tv action:@selector(leftSwipeShiftCaret:)];
+  SCSwipeGestureRecognizer *leftSwipeShiftCaret = [[SCSwipeGestureRecognizer alloc] initWithTarget:tv action:@selector(leftSwipeShiftCaret:)];
   leftSwipeShiftCaret.direction = UISwipeGestureRecognizerDirectionLeft;
   [tv addGestureRecognizer:leftSwipeShiftCaret];
   [leftSwipeShiftCaret release];
