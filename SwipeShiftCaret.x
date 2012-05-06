@@ -17,9 +17,28 @@ static BOOL orientationRotating = NO;
 
 @interface UIView (Private) <UITextInput>
 - (BOOL)isEditable;
+- (NSRange)selectedRange;
+- (NSRange)selectionRange;
+- (NSString *)text;
+//- (void)setSelectionRange:(NSRange)range;
+- (void)setSelection:(NSRange)range;
+- (void)setSelectedRange:(NSRange)range;
 @end
 
 @interface ActShiftCaret : NSObject <LAListener>
+@end
+
+@interface SCPanGestureRecognizer : UIPanGestureRecognizer
+@end
+
+@implementation SCPanGestureRecognizer
+- (BOOL)canBePreventedByGestureRecognizer:(UIGestureRecognizer *)gesture {
+  return NO;
+}
+
+- (BOOL)canPreventGestureRecognizer:(UIGestureRecognizer *)gesture {
+  return NO;
+}
 @end
 
 static inline int GetEditingTextViewsCount()
@@ -45,6 +64,18 @@ static void InstallSwipeGestureRecognizer()
       leftSwipeShiftCaret.direction = UISwipeGestureRecognizerDirectionLeft;
       [tv addGestureRecognizer:leftSwipeShiftCaret];
       [leftSwipeShiftCaret release];
+    }
+  }
+}
+
+static void InstallPanGestureRecognizer()
+{
+  for (UIView *tv in [[textViews copy] autorelease]) {
+    if ([tv isKindOfClass:[UIView class]]) {
+      SCPanGestureRecognizer *pan = [[SCPanGestureRecognizer alloc] initWithTarget:tv action:@selector(SCPanGestureDidPan:)];
+      pan.cancelsTouchesInView = NO;
+      [tv addGestureRecognizer:pan];
+      [pan release];
     }
   }
 }
@@ -78,8 +109,10 @@ static void RightShiftCaretNotificationReceived(CFNotificationCenterRef center, 
 static void KeyboardWillShowNotificationReceived(CFNotificationCenterRef center, void *observer, CFStringRef name, const void *object, CFDictionaryRef userInfo)
 {
   keyboardIsAppearing = YES;
-  if ([textViews count])
-    InstallSwipeGestureRecognizer();
+  if ([textViews count]) {
+    InstallPanGestureRecognizer();
+    //InstallSwipeGestureRecognizer();
+  }
   notify_set_state(notifyToken, GetEditingTextViewsCount());
 }
 
@@ -142,8 +175,10 @@ static void DidEnterBackgroundNotificationReceived(CFNotificationCenterRef cente
     [textViews addObject:self];
     notify_set_state(notifyToken, GetEditingTextViewsCount());
     // NOTE: this handling for compatible SwipeNav at Reeder (UIWebDocumentView).
-    if (keyboardIsAppearing)
-      InstallSwipeGestureRecognizer();
+    if (keyboardIsAppearing) {
+      InstallPanGestureRecognizer();
+      //InstallSwipeGestureRecognizer();
+    }
   }
   return tmp;
 }
@@ -158,6 +193,67 @@ static void DidEnterBackgroundNotificationReceived(CFNotificationCenterRef cente
 - (void)rightSwipeShiftCaret:(UISwipeGestureRecognizer *)sender
 {
   ShiftCaret(NO);
+}
+
+// based code is SwipeSelection.
+%new(v@:@)
+- (void)SCPanGestureDidPan:(UIPanGestureRecognizer *)sender
+{
+  static NSRange startRange;
+  static NSRange newRange;
+  static CGPoint startPoint;
+  static BOOL hasStarted = NO;
+
+  if (sender.state == UIGestureRecognizerStateEnded || sender.state == UIGestureRecognizerStateCancelled) {
+    hasStarted = NO;
+    sender.cancelsTouchesInView = NO;
+  } else if (sender.state == UIGestureRecognizerStateBegan) {
+    startPoint = [sender locationInView:self];
+    for (UIView *tv in [[textViews copy] autorelease]) {
+      // UITextView, UITextContentView
+      if ([tv respondsToSelector:@selector(selectedRange)])
+        startRange = (NSRange)[tv selectedRange];
+      // UITextField, UIWebDocumentView
+      else if ([tv respondsToSelector:@selector(selectionRange)])
+        startRange = (NSRange)[tv selectionRange];
+    }
+  } else if (sender.state == UIGestureRecognizerStateChanged) {
+    CGPoint offset = [sender translationInView:self];
+    if (!hasStarted && offset.x < 5 && offset.x > -5)
+      return;
+    sender.cancelsTouchesInView = YES;
+    hasStarted = YES;
+    int scale = 16;
+    int pointsChanged = offset.x / scale;
+    int newLocation = startRange.location;
+
+    int textLength = -1;
+    for (UIView *tv in [[textViews copy] autorelease])
+      if ([[tv text] length])
+        textLength = [[tv text] length];
+
+    newLocation += pointsChanged;
+    if (newLocation < 0) {
+      newLocation = 0;
+      return;
+    } else if (newLocation > textLength) {
+      newLocation = textLength;
+      return;
+    }
+
+    newRange = NSMakeRange(newLocation, 0);
+
+    for (UIView *tv in [[textViews copy] autorelease]) {
+      // UITextField
+      if ([tv respondsToSelector:@selector(setSelection:)])
+        [tv setSelection:newRange];
+      // UITextView, UITextContentView
+      else if ([tv respondsToSelector:@selector(setSelectedRange:)])
+        [tv setSelectedRange:newRange];
+      // TODO: UIWebDocumentView
+    }
+  }
+  
 }
 %end
 
