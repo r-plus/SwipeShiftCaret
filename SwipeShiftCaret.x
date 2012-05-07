@@ -200,24 +200,18 @@ static void DidEnterBackgroundNotificationReceived(CFNotificationCenterRef cente
 %new(v@:@)
 - (void)SCPanGestureDidPan:(UIPanGestureRecognizer *)sender
 {
-  static NSRange startRange;
-  static NSRange newRange;
-  static CGPoint startPoint;
   static BOOL hasStarted = NO;
+  static UITextPosition *startTextPosition;
 
   if (sender.state == UIGestureRecognizerStateEnded || sender.state == UIGestureRecognizerStateCancelled) {
     hasStarted = NO;
     sender.cancelsTouchesInView = NO;
+    [startTextPosition release];
+    startTextPosition = nil;
   } else if (sender.state == UIGestureRecognizerStateBegan) {
-    startPoint = [sender locationInView:self];
-    for (UIView *tv in [[textViews copy] autorelease]) {
-      // UITextView, UITextContentView
-      if ([tv respondsToSelector:@selector(selectedRange)])
-        startRange = (NSRange)[tv selectedRange];
-      // UITextField, UIWebDocumentView
-      else if ([tv respondsToSelector:@selector(selectionRange)])
-        startRange = (NSRange)[tv selectionRange];
-    }
+    for (UIView *tv in [[textViews copy] autorelease])
+      if ([tv respondsToSelector:@selector(positionFromPosition:offset:)])
+        startTextPosition = [tv.selectedTextRange.start retain];
   } else if (sender.state == UIGestureRecognizerStateChanged) {
     CGPoint offset = [sender translationInView:self];
     if (!hasStarted && offset.x < 5 && offset.x > -5)
@@ -226,32 +220,18 @@ static void DidEnterBackgroundNotificationReceived(CFNotificationCenterRef cente
     hasStarted = YES;
     int scale = 16;
     int pointsChanged = offset.x / scale;
-    int newLocation = startRange.location;
-
-    int textLength = -1;
-    for (UIView *tv in [[textViews copy] autorelease])
-      if ([[tv text] length])
-        textLength = [[tv text] length];
-
-    newLocation += pointsChanged;
-    if (newLocation < 0) {
-      newLocation = 0;
-      return;
-    } else if (newLocation > textLength) {
-      newLocation = textLength;
-      return;
-    }
-
-    newRange = NSMakeRange(newLocation, 0);
 
     for (UIView *tv in [[textViews copy] autorelease]) {
-      // UITextField
-      if ([tv respondsToSelector:@selector(setSelectionRange:)])
-        [tv setSelectionRange:newRange];
-      // UITextView, UITextContentView
-      else if ([tv respondsToSelector:@selector(setSelectedRange:)])
-        [tv setSelectedRange:newRange];
-      // TODO: UIWebDocumentView
+      UITextPosition *position = nil;
+      if ([tv respondsToSelector:@selector(positionFromPosition:inDirection:offset:)])
+        position = pointsChanged < 0 ? [tv positionFromPosition:startTextPosition inDirection:UITextLayoutDirectionLeft offset:-pointsChanged]
+          : [tv positionFromPosition:startTextPosition inDirection:UITextLayoutDirectionRight offset:pointsChanged];
+      // failsafe for over edge position crash.
+      if (!position)
+        continue;
+      UITextRange *range = [tv textRangeFromPosition:position toPosition:position];
+      if (range)
+        [tv setSelectedTextRange:range];
     }
   }
   
