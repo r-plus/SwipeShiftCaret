@@ -51,7 +51,7 @@
 			<key>cell</key>
 			<string>PSGroupCell</string>
 			<key>label</key>
-			<string>Gesture</string>
+			<string>Gesture of view</string>
       <key>footerText</key>
       <string>if disabled, move 1 char instead.</string>
 		</dict>
