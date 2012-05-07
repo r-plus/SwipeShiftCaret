@@ -9,6 +9,9 @@
 #define kLeft "jp.r-plus.leftshiftcaret"
 #define kRight "jp.r-plus.rightshiftcaret"
 
+// UIView for PanGesture.
+static UIView *tv;
+// MutableSet for SwipeGesture and Activator.
 static NSMutableSet *textViews;
 static int notifyToken;
 static BOOL isActive;
@@ -89,13 +92,11 @@ static void InstallSwipeGestureRecognizer()
 
 static void InstallPanGestureRecognizer()
 {
-  for (UIView *tv in [[textViews copy] autorelease]) {
-    if ([tv isKindOfClass:[UIView class]]) {
-      SCPanGestureRecognizer *pan = [[SCPanGestureRecognizer alloc] initWithTarget:tv action:@selector(SCPanGestureDidPan:)];
-      pan.cancelsTouchesInView = NO;
-      [tv addGestureRecognizer:pan];
-      [pan release];
-    }
+  if ([tv isKindOfClass:[UIView class]]) {
+    SCPanGestureRecognizer *pan = [[SCPanGestureRecognizer alloc] initWithTarget:tv action:@selector(SCPanGestureDidPan:)];
+    pan.cancelsTouchesInView = NO;
+    [tv addGestureRecognizer:pan];
+    [pan release];
   }
 }
 
@@ -177,6 +178,7 @@ static void DidEnterBackgroundNotificationReceived(CFNotificationCenterRef cente
   BOOL tmp = %orig;
   if (tmp && [self respondsToSelector:@selector(setSelectedTextRange:)]) {
     [textViews addObject:self];
+    tv = self;
     notify_set_state(notifyToken, GetEditingTextViewsCount());
     InstallPanGestureRecognizer();
     //InstallSwipeGestureRecognizer();
@@ -209,9 +211,8 @@ static void DidEnterBackgroundNotificationReceived(CFNotificationCenterRef cente
     [startTextPosition release];
     startTextPosition = nil;
   } else if (sender.state == UIGestureRecognizerStateBegan) {
-    for (UIView *tv in [[textViews copy] autorelease])
-      if ([tv respondsToSelector:@selector(positionFromPosition:offset:)])
-        startTextPosition = [tv.selectedTextRange.start retain];
+    if ([tv respondsToSelector:@selector(positionFromPosition:offset:)])
+      startTextPosition = [tv.selectedTextRange.start retain];
   } else if (sender.state == UIGestureRecognizerStateChanged) {
     CGPoint offset = [sender translationInView:self];
     if (!hasStarted && offset.x < 5 && offset.x > -5)
@@ -221,17 +222,15 @@ static void DidEnterBackgroundNotificationReceived(CFNotificationCenterRef cente
     int scale = 16;
     int pointsChanged = offset.x / scale;
 
-    for (UIView *tv in [[textViews copy] autorelease]) {
-      UITextPosition *position = nil;
-      if ([tv respondsToSelector:@selector(positionFromPosition:inDirection:offset:)])
-        position = pointsChanged < 0 ? [tv positionFromPosition:startTextPosition inDirection:UITextLayoutDirectionLeft offset:-pointsChanged]
-          : [tv positionFromPosition:startTextPosition inDirection:UITextLayoutDirectionRight offset:pointsChanged];
-      // failsafe for over edge position crash.
-      if (!position)
-        continue;
-      UITextRange *range = [tv textRangeFromPosition:position toPosition:position];
-      [tv setSelectedTextRange:range];
-    }
+    UITextPosition *position = nil;
+    if ([tv respondsToSelector:@selector(positionFromPosition:inDirection:offset:)])
+      position = pointsChanged < 0 ? [tv positionFromPosition:startTextPosition inDirection:UITextLayoutDirectionLeft offset:-pointsChanged]
+        : [tv positionFromPosition:startTextPosition inDirection:UITextLayoutDirectionRight offset:pointsChanged];
+    // failsafe for over edge position crash.
+    if (!position)
+      return;
+    UITextRange *range = [tv textRangeFromPosition:position toPosition:position];
+    [tv setSelectedTextRange:range];
   }
   
 }
