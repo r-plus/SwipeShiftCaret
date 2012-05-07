@@ -141,6 +141,7 @@ static void KeyboardWillHideNotificationReceived(CFNotificationCenterRef center,
   if (!orientationRotating && ![identifier isEqualToString:@"com.google.Gmail"]) {
     // mobilesafari doesnt call becomeFirstResponder method after google search from webview.
     if (![identifier isEqualToString:@"com.apple.mobilesafari"]) {
+      // TODO: prevent removeAllObjects when iOS builtin dictionary called.
       [textViews removeAllObjects];
       notify_set_state(notifyToken, GetEditingTextViewsCount());
     }
