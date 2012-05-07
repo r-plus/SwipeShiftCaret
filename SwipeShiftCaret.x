@@ -230,8 +230,7 @@ static void DidEnterBackgroundNotificationReceived(CFNotificationCenterRef cente
       if (!position)
         continue;
       UITextRange *range = [tv textRangeFromPosition:position toPosition:position];
-      if (range)
-        [tv setSelectedTextRange:range];
+      [tv setSelectedTextRange:range];
     }
   }
   
