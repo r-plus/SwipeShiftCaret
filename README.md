@@ -16,3 +16,4 @@ ISC License
 
 ###Referenced Project
 ####[Ryan Petrich - SuperScroller](https://github.com/rpetrich/SuperScroller/)
+####[freerunnering - SwipeSelection](https://github.com/freerunnering/SwipeSelection/)
