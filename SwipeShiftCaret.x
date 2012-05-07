@@ -8,6 +8,7 @@
 
 #define kLeft "jp.r-plus.leftshiftcaret"
 #define kRight "jp.r-plus.rightshiftcaret"
+#define PREF_PATH @"/var/mobile/Library/Preferences/jp.r-plus.SwipeShiftCaret.plist"
 
 // UIView for PanGesture.
 static UIView *tv;
@@ -16,6 +17,7 @@ static NSMutableSet *textViews;
 static int notifyToken;
 static BOOL isActive;
 static BOOL orientationRotating = NO;
+static BOOL panGestureEnabled;
 
 @interface UIView (Private) <UITextInput>
 - (BOOL)isEditable;
@@ -51,7 +53,7 @@ static BOOL orientationRotating = NO;
 
 @implementation SCPanGestureRecognizer
 - (BOOL)canBePreventedByGestureRecognizer:(UIGestureRecognizer *)gesture {
-  if ([gesture isMemberOfClass:[SCPanGestureRecognizer class]])
+  if ([gesture isMemberOfClass:[SCPanGestureRecognizer class]]) 
     return YES;
   return NO;
 }
@@ -129,8 +131,10 @@ static void RightShiftCaretNotificationReceived(CFNotificationCenterRef center, 
 static void KeyboardWillShowNotificationReceived(CFNotificationCenterRef center, void *observer, CFStringRef name, const void *object, CFDictionaryRef userInfo)
 {
   if ([textViews count]) {
-    InstallPanGestureRecognizer();
-    //InstallSwipeGestureRecognizer();
+    if (panGestureEnabled)
+      InstallPanGestureRecognizer();
+    else
+      InstallSwipeGestureRecognizer();
   }
   notify_set_state(notifyToken, GetEditingTextViewsCount());
 }
@@ -181,8 +185,10 @@ static void DidEnterBackgroundNotificationReceived(CFNotificationCenterRef cente
     [textViews addObject:self];
     tv = self;
     notify_set_state(notifyToken, GetEditingTextViewsCount());
-    InstallPanGestureRecognizer();
-    //InstallSwipeGestureRecognizer();
+    if (panGestureEnabled)
+      InstallPanGestureRecognizer();
+    else
+      InstallSwipeGestureRecognizer();
   }
   return tmp;
 }
@@ -302,3 +308,23 @@ static void DidEnterBackgroundNotificationReceived(CFNotificationCenterRef cente
   }
 }
 @end
+
+static void LoadSettings()
+{	
+  NSDictionary *dict = [NSDictionary dictionaryWithContentsOfFile:PREF_PATH];
+  id existPanGesture = [dict objectForKey:@"PanGestureEnabled"];
+  panGestureEnabled = existPanGesture ? [existPanGesture boolValue] : YES;
+}
+
+static void PostNotification(CFNotificationCenterRef center, void *observer, CFStringRef name, const void *object, CFDictionaryRef userInfo)
+{
+  LoadSettings();
+}
+
+%ctor
+{
+  NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+  CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(), NULL, PostNotification, CFSTR("jp.r-plus.swipeshiftcaret.settingschanged"), NULL, CFNotificationSuspensionBehaviorCoalesce);
+  LoadSettings();
+  [pool drain];
+}

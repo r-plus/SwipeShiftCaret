@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>title</key>
+	<string>SwipeShiftCaret</string>
+	<key>entry</key>
+	<dict>
+		<key>cell</key>
+		<string>PSLinkCell</string>
+		<key>icon</key>
+		<string>SwipeShiftCaret.png</string>
+		<key>label</key>
+		<string>SwipeShiftCaret</string>
+	</dict>
+	<key>items</key>
+	<array>
+		<dict>
+			<key>cell</key>
+			<string>PSGroupCell</string>
+			<key>label</key>
+			<string>Activator</string>
+      <key>footerText</key>
+      <string>Activator action invoke 1 char moving.</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSLinkCell</string>
+			<key>label</key>
+			<string>LeftShiftCaret</string>
+			<key>isController</key>
+			<true/>
+			<key>bundle</key>
+			<string>LibActivator</string>
+			<key>activatorListener</key>
+			<string>jp.r-plus.leftshiftcaret</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSLinkCell</string>
+			<key>label</key>
+			<string>RightShiftCaret</string>
+			<key>isController</key>
+			<true/>
+			<key>bundle</key>
+			<string>LibActivator</string>
+			<key>activatorListener</key>
+      <string>jp.r-plus.rightshiftcaret</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSGroupCell</string>
+			<key>label</key>
+			<string>Gesture</string>
+      <key>footerText</key>
+      <string>if disabled, move 1 char instead.</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSSwitchCell</string>
+			<key>default</key>
+      <true/>
+			<key>defaults</key>
+			<string>jp.r-plus.SwipeShiftCaret</string>
+			<key>key</key>
+			<string>PanGestureEnabled</string>
+			<key>label</key>
+			<string>Continual Move</string>
+			<key>PostNotification</key>
+			<string>jp.r-plus.swipeshiftcaret.settingschanged</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSGroupCell</string>
+      <key>footerText</key>
+      <string>Author: @r_plus</string>
+		</dict>
+	</array>
+</dict>
+</plist>
