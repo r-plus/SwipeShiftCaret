@@ -53,7 +53,7 @@ static BOOL panGestureEnabled;
 
 @implementation SCPanGestureRecognizer
 - (BOOL)canBePreventedByGestureRecognizer:(UIGestureRecognizer *)gesture {
-  if ([gesture isMemberOfClass:[SCPanGestureRecognizer class]]) 
+  if ([gesture isMemberOfClass:[SCPanGestureRecognizer class]])
     return YES;
   return NO;
 }
