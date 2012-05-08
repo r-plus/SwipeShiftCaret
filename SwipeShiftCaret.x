@@ -42,7 +42,9 @@ static BOOL panGestureEnabled;
 }
 
 - (BOOL)canPreventGestureRecognizer:(UIGestureRecognizer *)gesture {
-  if ([gesture isMemberOfClass:[SCSwipeGestureRecognizer class]])
+  if ([gesture isKindOfClass:[UISwipeGestureRecognizer class]] &&
+      // Don't prevent SwipeNav
+      ![gesture isMemberOfClass:%c(SNSwipeGestureRecognizer)])
     return YES;
   return NO;
 }
@@ -59,7 +61,10 @@ static BOOL panGestureEnabled;
 }
 
 - (BOOL)canPreventGestureRecognizer:(UIGestureRecognizer *)gesture {
-  if ([gesture isMemberOfClass:[SCPanGestureRecognizer class]])
+  if (([gesture isMemberOfClass:[SCPanGestureRecognizer class]] ||
+      [gesture isKindOfClass:[UISwipeGestureRecognizer class]]) &&
+      // Don't prevent SwipeNav
+      ![gesture isMemberOfClass:%c(SNSwipeGestureRecognizer)])
     return YES;
   return NO;
 }
@@ -104,6 +109,9 @@ static void InstallPanGestureRecognizer()
 
 static void ShiftCaret(BOOL isLeftSwipe)
 {
+  if (panGestureEnabled)
+    return;
+
   for (UIView *tv in [[textViews copy] autorelease]) {
     UITextPosition *position = nil;
     if ([tv respondsToSelector:@selector(positionFromPosition:inDirection:offset:)])
@@ -209,6 +217,9 @@ static void DidEnterBackgroundNotificationReceived(CFNotificationCenterRef cente
 %new(v@:@)
 - (void)SCPanGestureDidPan:(UIPanGestureRecognizer *)sender
 {
+  if (!panGestureEnabled)
+    return;
+
   static BOOL hasStarted = NO;
   static UITextPosition *startTextPosition;
 
@@ -273,7 +284,7 @@ static void DidEnterBackgroundNotificationReceived(CFNotificationCenterRef cente
     CFNotificationCenterAddObserver(local, WillEnterForegroundNotificationReceived, WillEnterForegroundNotificationReceived, (CFStringRef)UIApplicationDidFinishLaunchingNotification, NULL, CFNotificationSuspensionBehaviorCoalesce);
     CFNotificationCenterAddObserver(local, WillEnterForegroundNotificationReceived, WillEnterForegroundNotificationReceived, (CFStringRef)UIApplicationWillEnterForegroundNotification, NULL, CFNotificationSuspensionBehaviorCoalesce);
     CFNotificationCenterAddObserver(local, DidEnterBackgroundNotificationReceived, DidEnterBackgroundNotificationReceived, (CFStringRef)UIApplicationDidEnterBackgroundNotification, NULL, CFNotificationSuspensionBehaviorCoalesce);
-    CFNotificationCenterAddObserver(local, KeyboardWillShowNotificationReceived, KeyboardWillShowNotificationReceived, (CFStringRef)UIKeyboardWillShowNotification, NULL, CFNotificationSuspensionBehaviorCoalesce);
+    //CFNotificationCenterAddObserver(local, KeyboardWillShowNotificationReceived, KeyboardWillShowNotificationReceived, (CFStringRef)UIKeyboardWillShowNotification, NULL, CFNotificationSuspensionBehaviorCoalesce);
     CFNotificationCenterAddObserver(local, KeyboardWillHideNotificationReceived, KeyboardWillHideNotificationReceived, (CFStringRef)UIKeyboardWillHideNotification, NULL, CFNotificationSuspensionBehaviorCoalesce);
   }
   textViews = [[NSMutableSet alloc] init];
@@ -314,6 +325,10 @@ static void LoadSettings()
   NSDictionary *dict = [NSDictionary dictionaryWithContentsOfFile:PREF_PATH];
   id existPanGesture = [dict objectForKey:@"PanGestureEnabled"];
   panGestureEnabled = existPanGesture ? [existPanGesture boolValue] : YES;
+  if (panGestureEnabled)
+    InstallPanGestureRecognizer();
+  else
+    InstallSwipeGestureRecognizer();
 }
 
 static void PostNotification(CFNotificationCenterRef center, void *observer, CFStringRef name, const void *object, CFDictionaryRef userInfo)
@@ -324,6 +339,7 @@ static void PostNotification(CFNotificationCenterRef center, void *observer, CFS
 %ctor
 {
   NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+  CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(), NULL, KeyboardWillShowNotificationReceived, (CFStringRef)UIKeyboardWillShowNotification, NULL, CFNotificationSuspensionBehaviorCoalesce);
   CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(), NULL, PostNotification, CFSTR("jp.r-plus.swipeshiftcaret.settingschanged"), NULL, CFNotificationSuspensionBehaviorCoalesce);
   LoadSettings();
   [pool drain];
