@@ -132,12 +132,18 @@ static void ShiftCaret(BOOL isLeftSwipe)
   static BOOL shiftHeldDown = NO;
   static BOOL isLeftPanning = YES;
   static UITextRange *startTextRange;
+  static int numberOfTouches = 0;
+
+  int touchesCount = [sender numberOfTouches];
+  if (touchesCount > numberOfTouches)
+    numberOfTouches = touchesCount;
 
   UIKeyboardImpl *keyboardImpl = [%c(UIKeyboardImpl) sharedInstance];
   if ([keyboardImpl respondsToSelector:@selector(callLayoutIsShiftKeyBeingHeld)] && !shiftHeldDown)
     shiftHeldDown = [keyboardImpl callLayoutIsShiftKeyBeingHeld];
 
   if (sender.state == UIGestureRecognizerStateEnded || sender.state == UIGestureRecognizerStateCancelled) {
+    numberOfTouches = 0;
     shiftHeldDown = NO;
     isLeftPanning = YES;
     hasStarted = NO;
@@ -155,7 +161,7 @@ static void ShiftCaret(BOOL isLeftSwipe)
       isLeftPanning = offset.x < 0 ? YES : NO;
     sender.cancelsTouchesInView = YES;
     hasStarted = YES;
-    int scale = 16;
+    int scale = 16 / numberOfTouches;
     int pointsChanged = offset.x / scale;
 
     UITextPosition *position = nil;
