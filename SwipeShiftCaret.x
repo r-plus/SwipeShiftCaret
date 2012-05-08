@@ -10,6 +10,11 @@ static BOOL panGestureEnabled;
 @interface UIView (Private) <UITextInput>
 @end
 
+@interface UIKeyboardImpl : NSObject
++ (id)sharedInstance;
+- (BOOL)callLayoutIsShiftKeyBeingHeld;
+@end
+
 @interface SCSwipeGestureRecognizer : UISwipeGestureRecognizer
 @end
 
@@ -87,7 +92,7 @@ static void ShiftCaret(BOOL isLeftSwipe)
   if (!position)
     return;
   UITextRange *range = [tv textRangeFromPosition:position toPosition:position];
-  [tv setSelectedTextRange:range];
+  tv.selectedTextRange = range;
 }
 
 %hook UIView
@@ -124,34 +129,58 @@ static void ShiftCaret(BOOL isLeftSwipe)
     return;
 
   static BOOL hasStarted = NO;
-  static UITextPosition *startTextPosition;
+  static BOOL shiftHeldDown = NO;
+  static BOOL isLeftPanning = YES;
+  static UITextRange *startTextRange;
+
+  UIKeyboardImpl *keyboardImpl = [%c(UIKeyboardImpl) sharedInstance];
+  if ([keyboardImpl respondsToSelector:@selector(callLayoutIsShiftKeyBeingHeld)] && !shiftHeldDown)
+    shiftHeldDown = [keyboardImpl callLayoutIsShiftKeyBeingHeld];
 
   if (sender.state == UIGestureRecognizerStateEnded || sender.state == UIGestureRecognizerStateCancelled) {
+    shiftHeldDown = NO;
+    isLeftPanning = YES;
     hasStarted = NO;
     sender.cancelsTouchesInView = NO;
-    [startTextPosition release];
-    startTextPosition = nil;
+    [startTextRange release];
+    startTextRange = nil;
   } else if (sender.state == UIGestureRecognizerStateBegan) {
     if ([tv respondsToSelector:@selector(positionFromPosition:offset:)])
-      startTextPosition = [tv.selectedTextRange.start retain];
+      startTextRange = [tv.selectedTextRange retain];
   } else if (sender.state == UIGestureRecognizerStateChanged) {
     CGPoint offset = [sender translationInView:self];
     if (!hasStarted && offset.x < 5 && offset.x > -5)
       return;
+    if (!hasStarted)
+      isLeftPanning = offset.x < 0 ? YES : NO;
     sender.cancelsTouchesInView = YES;
     hasStarted = YES;
     int scale = 16;
     int pointsChanged = offset.x / scale;
 
     UITextPosition *position = nil;
-    if ([tv respondsToSelector:@selector(positionFromPosition:inDirection:offset:)])
-      position = pointsChanged < 0 ? [tv positionFromPosition:startTextPosition inDirection:UITextLayoutDirectionLeft offset:-pointsChanged]
-        : [tv positionFromPosition:startTextPosition inDirection:UITextLayoutDirectionRight offset:pointsChanged];
+    if ([tv respondsToSelector:@selector(positionFromPosition:inDirection:offset:)]) {
+      if (startTextRange.isEmpty)
+        position = [tv positionFromPosition:startTextRange.start inDirection:pointsChanged < 0 ? UITextLayoutDirectionLeft : UITextLayoutDirectionRight
+          offset:abs(pointsChanged)];
+      else
+        position = [tv positionFromPosition:isLeftPanning ? startTextRange.start : startTextRange.end
+          inDirection:pointsChanged < 0 ? UITextLayoutDirectionLeft : UITextLayoutDirectionRight
+          offset:abs(pointsChanged)];
+    }
     // failsafe for over edge position crash.
     if (!position)
       return;
-    UITextRange *range = [tv textRangeFromPosition:position toPosition:position];
-    [tv setSelectedTextRange:range];
+    UITextRange *range;
+    if (!shiftHeldDown)
+      range = [tv textRangeFromPosition:position toPosition:position];
+    else {
+      if (startTextRange.isEmpty)
+        range = [tv textRangeFromPosition:startTextRange.start toPosition:position];
+      else
+        range = [tv textRangeFromPosition:isLeftPanning ? startTextRange.end : startTextRange.start toPosition:position];
+    }
+    tv.selectedTextRange = range;
   }
 }
 %end
