@@ -1,5 +1,0 @@
-{
-  title = "Right Shift Caret";
-  description = "Shift caret to the right";
-  "compatible-modes" = ("springboard", "application", "lockscreen");
-}

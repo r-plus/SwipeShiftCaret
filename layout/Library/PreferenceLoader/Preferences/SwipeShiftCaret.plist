@@ -19,38 +19,6 @@
 			<key>cell</key>
 			<string>PSGroupCell</string>
 			<key>label</key>
-			<string>Activator</string>
-      <key>footerText</key>
-      <string>Activator action invoke 1 char moving.</string>
-		</dict>
-		<dict>
-			<key>cell</key>
-			<string>PSLinkCell</string>
-			<key>label</key>
-			<string>LeftShiftCaret</string>
-			<key>isController</key>
-			<true/>
-			<key>bundle</key>
-			<string>LibActivator</string>
-			<key>activatorListener</key>
-			<string>jp.r-plus.leftshiftcaret</string>
-		</dict>
-		<dict>
-			<key>cell</key>
-			<string>PSLinkCell</string>
-			<key>label</key>
-			<string>RightShiftCaret</string>
-			<key>isController</key>
-			<true/>
-			<key>bundle</key>
-			<string>LibActivator</string>
-			<key>activatorListener</key>
-      <string>jp.r-plus.rightshiftcaret</string>
-		</dict>
-		<dict>
-			<key>cell</key>
-			<string>PSGroupCell</string>
-			<key>label</key>
 			<string>Gesture of view</string>
       <key>footerText</key>
       <string>if disabled, move 1 char instead.</string>
