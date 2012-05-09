@@ -21,7 +21,7 @@
 			<key>label</key>
 			<string>Gesture of view</string>
       <key>footerText</key>
-      <string>if disabled, move 1 char instead.</string>
+      <string>If disabled, move 1 char instead.</string>
 		</dict>
 		<dict>
 			<key>cell</key>
@@ -37,6 +37,26 @@
 			<key>PostNotification</key>
 			<string>jp.r-plus.swipeshiftcaret.settingschanged</string>
 		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSGroupCell</string>
+			<key>label</key>
+			<string>Tips of Continual Move</string>
+      <key>isStaticText</key>
+      <true/>
+		</dict>
+    <dict>
+      <key>cell</key>
+      <string>PSStaticTextCell</string>
+      <key>label</key>
+      <string>Faster moving at multi-touch</string>
+    </dict>
+    <dict>
+      <key>cell</key>
+      <string>PSStaticTextCell</string>
+      <key>label</key>
+      <string>With hold shift key = select</string>
+    </dict>
 		<dict>
 			<key>cell</key>
 			<string>PSGroupCell</string>
