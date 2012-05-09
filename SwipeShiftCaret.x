@@ -110,20 +110,20 @@ static void ShiftCaret(BOOL isLeftSwipe)
 }
 
 %new(v@:@)
-- (void)leftSwipeShiftCaret:(UISwipeGestureRecognizer *)sender
+- (void)leftSwipeShiftCaret:(UISwipeGestureRecognizer *)gesture
 {
   ShiftCaret(YES);
 }
 
 %new(v@:@)
-- (void)rightSwipeShiftCaret:(UISwipeGestureRecognizer *)sender
+- (void)rightSwipeShiftCaret:(UISwipeGestureRecognizer *)gesture
 {
   ShiftCaret(NO);
 }
 
 // based code is SwipeSelection.
 %new(v@:@)
-- (void)SCPanGestureDidPan:(UIPanGestureRecognizer *)sender
+- (void)SCPanGestureDidPan:(UIPanGestureRecognizer *)gesture
 {
   if (!panGestureEnabled)
     return;
@@ -134,7 +134,7 @@ static void ShiftCaret(BOOL isLeftSwipe)
   static UITextRange *startTextRange;
   static int numberOfTouches = 0;
 
-  int touchesCount = [sender numberOfTouches];
+  int touchesCount = [gesture numberOfTouches];
   if (touchesCount > numberOfTouches)
     numberOfTouches = touchesCount;
 
@@ -142,24 +142,24 @@ static void ShiftCaret(BOOL isLeftSwipe)
   if ([keyboardImpl respondsToSelector:@selector(callLayoutIsShiftKeyBeingHeld)] && !shiftHeldDown)
     shiftHeldDown = [keyboardImpl callLayoutIsShiftKeyBeingHeld];
 
-  if (sender.state == UIGestureRecognizerStateEnded || sender.state == UIGestureRecognizerStateCancelled) {
+  if (gesture.state == UIGestureRecognizerStateEnded || gesture.state == UIGestureRecognizerStateCancelled) {
     numberOfTouches = 0;
     shiftHeldDown = NO;
     isLeftPanning = YES;
     hasStarted = NO;
-    sender.cancelsTouchesInView = NO;
+    gesture.cancelsTouchesInView = NO;
     [startTextRange release];
     startTextRange = nil;
-  } else if (sender.state == UIGestureRecognizerStateBegan) {
-    if ([tv respondsToSelector:@selector(positionFromPosition:offset:)])
+  } else if (gesture.state == UIGestureRecognizerStateBegan) {
+    if ([tv respondsToSelector:@selector(positionFromPosition:inDirection:offset:)])
       startTextRange = [tv.selectedTextRange retain];
-  } else if (sender.state == UIGestureRecognizerStateChanged) {
-    CGPoint offset = [sender translationInView:self];
+  } else if (gesture.state == UIGestureRecognizerStateChanged) {
+    CGPoint offset = [gesture translationInView:self];
     if (!hasStarted && offset.x < 5 && offset.x > -5)
       return;
     if (!hasStarted)
       isLeftPanning = offset.x < 0 ? YES : NO;
-    sender.cancelsTouchesInView = YES;
+    gesture.cancelsTouchesInView = YES;
     hasStarted = YES;
     int scale = 16 / numberOfTouches;
     int pointsChanged = offset.x / scale;
@@ -167,7 +167,8 @@ static void ShiftCaret(BOOL isLeftSwipe)
     UITextPosition *position = nil;
     if ([tv respondsToSelector:@selector(positionFromPosition:inDirection:offset:)]) {
       if (startTextRange.isEmpty)
-        position = [tv positionFromPosition:startTextRange.start inDirection:pointsChanged < 0 ? UITextLayoutDirectionLeft : UITextLayoutDirectionRight
+        position = [tv positionFromPosition:startTextRange.start
+          inDirection:pointsChanged < 0 ? UITextLayoutDirectionLeft : UITextLayoutDirectionRight
           offset:abs(pointsChanged)];
       else
         position = [tv positionFromPosition:isLeftPanning ? startTextRange.start : startTextRange.end
@@ -177,6 +178,7 @@ static void ShiftCaret(BOOL isLeftSwipe)
     // failsafe for over edge position crash.
     if (!position)
       return;
+
     UITextRange *range;
     if (!shiftHeldDown)
       range = [tv textRangeFromPosition:position toPosition:position];
