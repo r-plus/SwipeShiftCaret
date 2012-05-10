@@ -151,6 +151,7 @@ static void ShiftCaret(BOOL isLeftSwipe)
     shiftHeldDown = [keyboardImpl callLayoutIsShiftKeyBeingHeld];
 
   if (gesture.state == UIGestureRecognizerStateEnded || gesture.state == UIGestureRecognizerStateCancelled) {
+    // cleanup
     numberOfTouches = 0;
     shiftHeldDown = NO;
     isLeftPanning = YES;
@@ -158,6 +159,13 @@ static void ShiftCaret(BOOL isLeftSwipe)
     gesture.cancelsTouchesInView = NO;
     [startTextRange release];
     startTextRange = nil;
+    // auto pop-up menu.
+    UITextRange *range = tv.selectedTextRange;
+    if (range && !range.isEmpty) {
+      UIMenuController *mc = [UIMenuController sharedMenuController];
+      [mc setTargetRect:[tv firstRectForRange:range] inView:tv];
+      [mc setMenuVisible:YES animated:YES];
+    }
   } else if (gesture.state == UIGestureRecognizerStateBegan) {
     if ([tv respondsToSelector:@selector(positionFromPosition:inDirection:offset:)])
       startTextRange = [tv.selectedTextRange retain];
