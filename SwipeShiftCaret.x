@@ -109,6 +109,13 @@ static void ShiftCaret(BOOL isLeftSwipe)
   return tmp;
 }
 
+- (BOOL)resignFirstResponder
+{
+  if (tv == self)
+    tv = nil;
+  return %orig;
+}
+
 %new(v@:@)
 - (void)leftSwipeShiftCaret:(UISwipeGestureRecognizer *)gesture
 {
@@ -198,10 +205,12 @@ static void LoadSettings()
   NSDictionary *dict = [NSDictionary dictionaryWithContentsOfFile:PREF_PATH];
   id existPanGesture = [dict objectForKey:@"PanGestureEnabled"];
   panGestureEnabled = existPanGesture ? [existPanGesture boolValue] : YES;
-  if (panGestureEnabled)
-    InstallPanGestureRecognizer();
-  else
-    InstallSwipeGestureRecognizer();
+  if (tv) {
+    if (panGestureEnabled)
+      InstallPanGestureRecognizer();
+    else
+      InstallSwipeGestureRecognizer();
+  }
 }
 
 static void PostNotification(CFNotificationCenterRef center, void *observer, CFStringRef name, const void *object, CFDictionaryRef userInfo)
