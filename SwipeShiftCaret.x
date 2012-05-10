@@ -16,11 +16,18 @@ static BOOL panGestureEnabled;
 - (BOOL)callLayoutIsShiftKeyBeingHeld;
 @end
 
+@interface UIFieldEditor : NSObject
++ (id)sharedFieldEditor;
+- (void)revealSelection;
+@end
+
 @interface SCSwipeGestureRecognizer : UISwipeGestureRecognizer
 @end
 
 @implementation SCSwipeGestureRecognizer
 - (BOOL)canBePreventedByGestureRecognizer:(UIGestureRecognizer *)gesture {
+  if ([gesture isKindOfClass:[UIPanGestureRecognizer class]])
+    self.state = UIGestureRecognizerStateFailed;
   if ([gesture isMemberOfClass:[SCSwipeGestureRecognizer class]])
     return YES;
   return NO;
@@ -40,6 +47,8 @@ static BOOL panGestureEnabled;
 
 @implementation SCPanGestureRecognizer
 - (BOOL)canBePreventedByGestureRecognizer:(UIGestureRecognizer *)gesture {
+  if ([gesture isKindOfClass:[UIPanGestureRecognizer class]])
+    self.state = UIGestureRecognizerStateCancelled;
   if ([gesture isMemberOfClass:[SCPanGestureRecognizer class]])
     return YES;
   return NO;
@@ -94,6 +103,7 @@ static void ShiftCaret(BOOL isLeftSwipe)
     return;
   UITextRange *range = [tv textRangeFromPosition:position toPosition:position];
   tv.selectedTextRange = range;
+  [[%c(UIFieldEditor) sharedFieldEditor] revealSelection];
 }
 
 %hook UIView
@@ -209,6 +219,7 @@ static void ShiftCaret(BOOL isLeftSwipe)
         range = [tv textRangeFromPosition:isLeftPanning ? startTextRange.end : startTextRange.start toPosition:position];
     }
     tv.selectedTextRange = range;
+    [[%c(UIFieldEditor) sharedFieldEditor] revealSelection];
   }
 }
 %end
@@ -219,10 +230,14 @@ static void LoadSettings()
   id existPanGesture = [dict objectForKey:@"PanGestureEnabled"];
   panGestureEnabled = existPanGesture ? [existPanGesture boolValue] : YES;
   if (tv) {
-    if (panGestureEnabled)
+    if (panGestureEnabled) {
       InstallPanGestureRecognizer();
-    else
+    } else {
       InstallSwipeGestureRecognizer();
+      for (UIGestureRecognizer *gesture in [tv gestureRecognizers])
+        if ([gesture isMemberOfClass:[SCPanGestureRecognizer class]])
+          [tv removeGestureRecognizer:gesture];
+    }
   }
 }
 
