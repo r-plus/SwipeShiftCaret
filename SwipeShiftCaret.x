@@ -1,4 +1,5 @@
 #import <UIKit/UIKit.h>
+#import <UIKit/UIGestureRecognizerSubclass.h>
 
 %config(generator=internal);
 
@@ -162,8 +163,12 @@ static void ShiftCaret(BOOL isLeftSwipe)
       startTextRange = [tv.selectedTextRange retain];
   } else if (gesture.state == UIGestureRecognizerStateChanged) {
     CGPoint offset = [gesture translationInView:self];
-    if (!hasStarted && offset.x < 5 && offset.x > -5)
+    if (!hasStarted && abs(offset.x) < 16)
       return;
+    if (!hasStarted && abs(offset.x) < abs(offset.y)) {
+      gesture.state = UIGestureRecognizerStateEnded;
+      return;
+    }
     if (!hasStarted)
       isLeftPanning = offset.x < 0 ? YES : NO;
     gesture.cancelsTouchesInView = YES;
