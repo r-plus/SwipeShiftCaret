@@ -9,6 +9,7 @@ static UIView *tv;
 static BOOL panGestureEnabled;
 
 @interface UIView (Private) <UITextInput>
+- (void)scrollSelectionToVisible:(BOOL)arg1;
 @end
 
 @interface UIKeyboardImpl : NSObject
@@ -26,7 +27,8 @@ static BOOL panGestureEnabled;
 
 @implementation SCSwipeGestureRecognizer
 - (BOOL)canBePreventedByGestureRecognizer:(UIGestureRecognizer *)gesture {
-  if ([gesture isKindOfClass:[UIPanGestureRecognizer class]])
+  if ([gesture isKindOfClass:[UIPanGestureRecognizer class]] &&
+      ![gesture isKindOfClass:%c(CKMessageEntryView)])
     self.state = UIGestureRecognizerStateFailed;
   if ([gesture isMemberOfClass:[SCSwipeGestureRecognizer class]])
     return YES;
@@ -47,7 +49,8 @@ static BOOL panGestureEnabled;
 
 @implementation SCPanGestureRecognizer
 - (BOOL)canBePreventedByGestureRecognizer:(UIGestureRecognizer *)gesture {
-  if ([gesture isKindOfClass:[UIPanGestureRecognizer class]])
+  if ([gesture isKindOfClass:[UIPanGestureRecognizer class]] &&
+      ![gesture.view isKindOfClass:%c(CKMessageEntryView)])
     self.state = UIGestureRecognizerStateCancelled;
   if ([gesture isMemberOfClass:[SCPanGestureRecognizer class]])
     return YES;
@@ -103,7 +106,11 @@ static void ShiftCaret(BOOL isLeftSwipe)
     return;
   UITextRange *range = [tv textRangeFromPosition:position toPosition:position];
   tv.selectedTextRange = range;
+  // reveal for UITextField.
   [[%c(UIFieldEditor) sharedFieldEditor] revealSelection];
+  // reveal for UITextView, UITextContentView and UIWebDocumentView.
+  if ([tv respondsToSelector:@selector(scrollSelectionToVisible:)])
+    [tv scrollSelectionToVisible:YES];
 }
 
 %hook UIView
@@ -169,6 +176,9 @@ static void ShiftCaret(BOOL isLeftSwipe)
     gesture.cancelsTouchesInView = NO;
     [startTextRange release];
     startTextRange = nil;
+    // reveal for UITextView, UITextContentView and UIWebDocumentView.
+    if ([tv respondsToSelector:@selector(scrollSelectionToVisible:)])
+      [tv scrollSelectionToVisible:YES];
     // auto pop-up menu.
     UITextRange *range = tv.selectedTextRange;
     if (range && !range.isEmpty) {
@@ -219,6 +229,7 @@ static void ShiftCaret(BOOL isLeftSwipe)
         range = [tv textRangeFromPosition:isLeftPanning ? startTextRange.end : startTextRange.start toPosition:position];
     }
     tv.selectedTextRange = range;
+    // reveal for UITextField.
     [[%c(UIFieldEditor) sharedFieldEditor] revealSelection];
   }
 }
