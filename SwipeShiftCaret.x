@@ -7,7 +7,6 @@
 
 static UIView *tv;
 static BOOL panGestureEnabled;
-static BOOL multiTouchSelectEnabled;
 
 @interface UIView (Private) <UITextInput>
 - (void)scrollSelectionToVisible:(BOOL)arg1;
@@ -203,10 +202,6 @@ static void ShiftCaret(BOOL isLeftSwipe)
     gesture.cancelsTouchesInView = YES;
     hasStarted = YES;
     int scale = 16 / numberOfTouches;
-    if (multiTouchSelectEnabled && numberOfTouches >= 2) {
-      scale = 16;
-      shiftHeldDown = YES;
-    }
     int pointsChanged = offset.x / scale;
 
     UITextPosition *position = nil;
@@ -245,8 +240,6 @@ static void LoadSettings()
   NSDictionary *dict = [NSDictionary dictionaryWithContentsOfFile:PREF_PATH];
   id existPanGesture = [dict objectForKey:@"PanGestureEnabled"];
   panGestureEnabled = existPanGesture ? [existPanGesture boolValue] : YES;
-  id existMultiTouchSelect = [dict objectForKey:@"MultiTouchSelectEnabled"];
-  multiTouchSelectEnabled = existMultiTouchSelect ? [existMultiTouchSelect boolValue] : NO;
   if (tv) {
     if (panGestureEnabled) {
       InstallPanGestureRecognizer();
