@@ -7,6 +7,7 @@
 
 static UIView *tv;
 static BOOL panGestureEnabled;
+static BOOL fasterByVelocityIsEnabled;
 
 @interface UIView (Private) <UITextInput>
 - (void)scrollSelectionToVisible:(BOOL)arg1;
@@ -201,7 +202,12 @@ static void ShiftCaret(BOOL isLeftSwipe)
       isLeftPanning = offset.x < 0 ? YES : NO;
     gesture.cancelsTouchesInView = YES;
     hasStarted = YES;
-    int scale = 16 / numberOfTouches;
+    if (fasterByVelocityIsEnabled) {
+      CGPoint velo = [gesture velocityInView:self];
+      if (abs(velo.x) / 1000 != 0)
+        numberOfTouches += (abs(velo.x) / 1000);
+    }
+    int scale = 16 / numberOfTouches ? : 1;
     int pointsChanged = offset.x / scale;
 
     UITextPosition *position = nil;
@@ -240,6 +246,8 @@ static void LoadSettings()
   NSDictionary *dict = [NSDictionary dictionaryWithContentsOfFile:PREF_PATH];
   id existPanGesture = [dict objectForKey:@"PanGestureEnabled"];
   panGestureEnabled = existPanGesture ? [existPanGesture boolValue] : YES;
+  id existVelocity = [dict objectForKey:@"VelocityEnabled"];
+  fasterByVelocityIsEnabled = existVelocity ? [existVelocity boolValue] : NO;
   if (tv) {
     if (panGestureEnabled) {
       InstallPanGestureRecognizer();
