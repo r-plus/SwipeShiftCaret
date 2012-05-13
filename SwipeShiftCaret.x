@@ -29,7 +29,7 @@ static BOOL fasterByVelocityIsEnabled;
 @implementation SCSwipeGestureRecognizer
 - (BOOL)canBePreventedByGestureRecognizer:(UIGestureRecognizer *)gesture {
   if ([gesture isKindOfClass:[UIPanGestureRecognizer class]] &&
-      ![gesture isKindOfClass:%c(CKMessageEntryView)] &&
+      ![gesture.view isKindOfClass:%c(CKMessageEntryView)] &&
       ![[[NSBundle mainBundle] bundleIdentifier] isEqualToString:@"com.google.Gmail"])
     self.state = UIGestureRecognizerStateFailed;
   if ([gesture isMemberOfClass:[SCSwipeGestureRecognizer class]])
