@@ -338,6 +338,8 @@ static void PopupMenu(CGRect rect)
         if (pointsChanged < 0) {
           if (startRange.length == 0) {
             selectedLength += abs(pointsChanged);
+            if (location < 0)
+              selectedLength = startRange.location;
           } else {
             if (!isLeftPanning) {
               selectedLength -= abs(pointsChanged);
@@ -372,10 +374,10 @@ static void PopupMenu(CGRect rect)
       else if (location > tv.text.length)
         location = tv.text.length;
 
-      if (selectedLength > tv.text.length)
-        selectedLength = tv.text.length;
-      else if (selectedLength + location > tv.text.length)
+      if (selectedLength + location > tv.text.length)
         selectedLength = tv.text.length - location;
+      else if (selectedLength > tv.text.length)
+        selectedLength = tv.text.length;
 
       NSRange range = NSMakeRange(location,selectedLength);
 
