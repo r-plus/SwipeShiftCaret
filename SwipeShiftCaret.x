@@ -205,6 +205,7 @@ static void PopupMenu(CGRect rect)
   static UITextRange *startTextRange;
   static NSRange startRange;
   static int numberOfTouches = 0;
+  static CGPoint prevVelo;
 
   int touchesCount = [gesture numberOfTouches];
   if (touchesCount > numberOfTouches)
@@ -218,6 +219,7 @@ static void PopupMenu(CGRect rect)
     // cleanup
     numberOfTouches = 0;
     //shiftHeldDown = NO;
+    prevVelo = CGPointMake(0,0);
     isLeftPanning = YES;
     hasStarted = NO;
     gesture.cancelsTouchesInView = NO;
@@ -264,8 +266,9 @@ static void PopupMenu(CGRect rect)
     hasStarted = YES;
     if (fasterByVelocityIsEnabled) {
       CGPoint velo = [gesture velocityInView:self];
-      if (abs(velo.x) / 1000 != 0)
+      if (abs(prevVelo.x) < 1000 && abs(velo.x) / 1000 != 0)
         numberOfTouches += (abs(velo.x) / 1000);
+      prevVelo = velo;
     }
     int scale = 16 / numberOfTouches ? : 1;
     int pointsChanged = offset.x / scale;
