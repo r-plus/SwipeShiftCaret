@@ -140,6 +140,8 @@ static void PopupMenu(CGRect rect)
   NSString *kbString = [kb displayString];
   if ([kbString isEqualToString:@"あいう"] || [kbString isEqualToString:@"ABC"] || [kbString isEqualToString:@"☆123"] || [kbString isEqualToString:@"123"])
     shiftHeldDown = YES;
+  else
+    shiftHeldDown = NO;
 }
 
 - (void)touchesCancelled:(id)arg1 withEvent:(id)arg2
