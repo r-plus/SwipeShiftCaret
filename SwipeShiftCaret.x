@@ -8,9 +8,17 @@
 static UIView *tv;
 static BOOL panGestureEnabled;
 static BOOL fasterByVelocityIsEnabled;
+static BOOL shiftHeldDown = NO;
 
 @interface UIView (Private) <UITextInput>
+- (NSRange)selectedRange;
+- (NSRange)selectionRange;
+- (void)setSelectedRange:(NSRange)range;
+- (void)setSelectionRange:(NSRange)range;
 - (void)scrollSelectionToVisible:(BOOL)arg1;
+- (CGRect)rectForSelection:(NSRange)range;
+- (CGRect)textRectForBounds:(CGRect)rect;
+@property(copy) NSString *text;
 @end
 
 @interface UIKeyboardImpl : NSObject
@@ -116,11 +124,45 @@ static void ShiftCaret(BOOL isLeftSwipe)
     [tv scrollSelectionToVisible:YES];
 }
 
+static void PopupMenu(CGRect rect)
+{
+  UIMenuController *mc = [UIMenuController sharedMenuController];
+  [mc setTargetRect:rect inView:tv];
+  [mc setMenuVisible:YES animated:YES];
+}
+
+%hook UIKeyboardLayoutStar
+- (void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event
+{
+  %orig;
+  UITouch *touch = [touches anyObject];
+  UIKBKey *kb = [self keyHitTest:[touch locationInView:touch.view]];
+  NSString *kbString = [kb displayString];
+  if ([kbString isEqualToString:@"あいう"] || [kbString isEqualToString:@"ABC"] || [kbString isEqualToString:@"☆123"] || [kbString isEqualToString:@"123"])
+    shiftHeldDown = YES;
+}
+
+- (void)touchesCancelled:(id)arg1 withEvent:(id)arg2
+{
+  %orig;
+  shiftHeldDown = NO;
+}
+
+- (void)touchesEnded:(id)arg1 withEvent:(id)arg2
+{
+  %orig;
+  shiftHeldDown = NO;
+}
+%end
+
 %hook UIView
 - (BOOL)becomeFirstResponder
 {
   BOOL tmp = %orig;
-  if (tmp && [self respondsToSelector:@selector(setSelectedTextRange:)]) {
+  if ((tmp && [self respondsToSelector:@selector(setSelectedTextRange:)])
+      || [self respondsToSelector:@selector(setSelectedRange:)]
+      || [self respondsToSelector:@selector(setSelectionRange:)]
+      ) {
     tv = self;
     if (panGestureEnabled)
       InstallPanGestureRecognizer();
@@ -157,9 +199,9 @@ static void ShiftCaret(BOOL isLeftSwipe)
     return;
 
   static BOOL hasStarted = NO;
-  static BOOL shiftHeldDown = NO;
   static BOOL isLeftPanning = YES;
   static UITextRange *startTextRange;
+  static NSRange startRange;
   static int numberOfTouches = 0;
 
   int touchesCount = [gesture numberOfTouches];
@@ -173,25 +215,39 @@ static void ShiftCaret(BOOL isLeftSwipe)
   if (gesture.state == UIGestureRecognizerStateEnded || gesture.state == UIGestureRecognizerStateCancelled) {
     // cleanup
     numberOfTouches = 0;
-    shiftHeldDown = NO;
+    //shiftHeldDown = NO;
     isLeftPanning = YES;
     hasStarted = NO;
     gesture.cancelsTouchesInView = NO;
-    [startTextRange release];
+    if ([tv respondsToSelector:@selector(positionFromPosition:inDirection:offset:)])
+      [startTextRange release];
     startTextRange = nil;
     // reveal for UITextView, UITextContentView and UIWebDocumentView.
     if ([tv respondsToSelector:@selector(scrollSelectionToVisible:)])
       [tv scrollSelectionToVisible:YES];
     // auto pop-up menu.
-    UITextRange *range = tv.selectedTextRange;
-    if (range && !range.isEmpty) {
-      UIMenuController *mc = [UIMenuController sharedMenuController];
-      [mc setTargetRect:[tv firstRectForRange:range] inView:tv];
-      [mc setMenuVisible:YES animated:YES];
+    if ([tv respondsToSelector:@selector(selectedTextRange)]) {
+      UITextRange *range = tv.selectedTextRange;
+      if (range && !range.isEmpty)
+        PopupMenu([tv firstRectForRange:range]);
+    } else if ([tv respondsToSelector:@selector(rectForSelection:)]) {
+      NSRange range = [tv selectedRange];
+      // TODO: more better rect.
+      if (range.length)
+        PopupMenu([tv rectForSelection:range]);
+    } else if ([tv respondsToSelector:@selector(textRectForBounds:)]) {
+      NSRange range = [tv selectionRange];
+      // TODO: more better rect.
+      if (range.length)
+        PopupMenu([tv textRectForBounds:tv.bounds]);
     }
   } else if (gesture.state == UIGestureRecognizerStateBegan) {
     if ([tv respondsToSelector:@selector(positionFromPosition:inDirection:offset:)])
       startTextRange = [tv.selectedTextRange retain];
+    else if ([tv respondsToSelector:@selector(selectedRange)])
+      startRange = [tv selectedRange];
+    else if ([tv respondsToSelector:@selector(selectionRange)])
+      startRange = [tv selectionRange];
   } else if (gesture.state == UIGestureRecognizerStateChanged) {
     CGPoint offset = [gesture translationInView:self];
     if (!hasStarted && abs(offset.x) < 16)
@@ -212,33 +268,94 @@ static void ShiftCaret(BOOL isLeftSwipe)
     int scale = 16 / numberOfTouches ? : 1;
     int pointsChanged = offset.x / scale;
 
-    UITextPosition *position = nil;
+    // for iOS 5+ and UIWebDocumentView 4+
     if ([tv respondsToSelector:@selector(positionFromPosition:inDirection:offset:)]) {
-      if (startTextRange.isEmpty)
-        position = [tv positionFromPosition:startTextRange.start
-          inDirection:pointsChanged < 0 ? UITextLayoutDirectionLeft : UITextLayoutDirectionRight
-          offset:abs(pointsChanged)];
-      else
-        position = [tv positionFromPosition:isLeftPanning ? startTextRange.start : startTextRange.end
-          inDirection:pointsChanged < 0 ? UITextLayoutDirectionLeft : UITextLayoutDirectionRight
-          offset:abs(pointsChanged)];
-    }
-    // failsafe for over edge position crash.
-    if (!position)
-      return;
+      UITextPosition *position = nil;
+      if ([tv respondsToSelector:@selector(positionFromPosition:inDirection:offset:)]) {
+        if (startTextRange.isEmpty)
+          position = [tv positionFromPosition:startTextRange.start
+            inDirection:pointsChanged < 0 ? UITextLayoutDirectionLeft : UITextLayoutDirectionRight
+            offset:abs(pointsChanged)];
+        else
+          position = [tv positionFromPosition:isLeftPanning ? startTextRange.start : startTextRange.end
+            inDirection:pointsChanged < 0 ? UITextLayoutDirectionLeft : UITextLayoutDirectionRight
+            offset:abs(pointsChanged)];
+      }
+      // failsafe for over edge position crash.
+      if (!position)
+        return;
 
-    UITextRange *range;
-    if (!shiftHeldDown)
-      range = [tv textRangeFromPosition:position toPosition:position];
-    else {
-      if (startTextRange.isEmpty)
-        range = [tv textRangeFromPosition:startTextRange.start toPosition:position];
-      else
-        range = [tv textRangeFromPosition:isLeftPanning ? startTextRange.end : startTextRange.start toPosition:position];
+      UITextRange *range;
+      if (!shiftHeldDown)
+        range = [tv textRangeFromPosition:position toPosition:position];
+      else {
+        if (startTextRange.isEmpty)
+          range = [tv textRangeFromPosition:startTextRange.start toPosition:position];
+        else
+          range = [tv textRangeFromPosition:isLeftPanning ? startTextRange.end : startTextRange.start toPosition:position];
+      }
+      tv.selectedTextRange = range;
+      // reveal for UITextField.
+      [[%c(UIFieldEditor) sharedFieldEditor] revealSelection];
+    } else {
+      // for iOS 4
+      int location = startRange.location;
+      location += pointsChanged;
+      int selectedLength = startRange.length;
+      
+      if (shiftHeldDown) {
+        if (pointsChanged < 0) {
+          if (startRange.length == 0) {
+            selectedLength += abs(pointsChanged);
+          } else {
+            if (!isLeftPanning) {
+              selectedLength -= abs(pointsChanged);
+              if (selectedLength > 0) {
+                location = startRange.location;
+              } else {
+                location += startRange.length; 
+                selectedLength = startRange.location - location;
+                if (selectedLength > startRange.location)
+                  selectedLength = startRange.location;
+              }
+            } else {
+              selectedLength += abs(pointsChanged);
+              if (selectedLength > startRange.location + startRange.length)
+                selectedLength = startRange.location + startRange.length;
+            }
+          }
+        } else {
+          if (startRange.length == 0) {
+            selectedLength += abs(pointsChanged);
+            location = startRange.location;
+          } else {
+            selectedLength += abs(pointsChanged);
+            location = startRange.location;
+          }
+        }
+      } else
+        selectedLength = 0;
+
+      if (location < 0)
+        location = 0;
+      else if (location > tv.text.length)
+        location = tv.text.length;
+
+      if (selectedLength > tv.text.length)
+        selectedLength = tv.text.length;
+      else if (selectedLength + location > tv.text.length)
+        selectedLength = tv.text.length - location;
+
+      NSRange range = NSMakeRange(location,selectedLength);
+
+      if ([tv respondsToSelector:@selector(setSelectedRange:)]) {
+        // UITextView and UITextContentView
+        [tv setSelectedRange:range];
+      } else if ([tv respondsToSelector:@selector(setSelectionRange:)]) {
+        // UITextField
+        [tv setSelectionRange:range];
+      }
     }
-    tv.selectedTextRange = range;
-    // reveal for UITextField.
-    [[%c(UIFieldEditor) sharedFieldEditor] revealSelection];
   }
 }
 %end
