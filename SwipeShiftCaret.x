@@ -31,6 +31,11 @@ static BOOL shiftHeldDown = NO;
 - (void)revealSelection;
 @end
 
+@interface UIKeyboardLayoutStar : NSObject
+- (UIKBKey *)keyHitTest:(CGPoint)arg;
+- (NSString *)displayString;
+@end
+
 @interface SCSwipeGestureRecognizer : UISwipeGestureRecognizer
 @end
 
@@ -108,15 +113,36 @@ static void ShiftCaret(BOOL isLeftSwipe)
   if (panGestureEnabled)
     return;
 
-  UITextPosition *position = nil;
-  if ([tv respondsToSelector:@selector(positionFromPosition:inDirection:offset:)])
+  if ([tv respondsToSelector:@selector(positionFromPosition:inDirection:offset:)]) {
+    UITextPosition *position = nil;
     position = isLeftSwipe ? [tv positionFromPosition:tv.selectedTextRange.start inDirection:UITextLayoutDirectionLeft offset:1]
       : [tv positionFromPosition:tv.selectedTextRange.end inDirection:UITextLayoutDirectionRight offset:1];
-  // failsafe for over edge position crash.
-  if (!position)
-    return;
-  UITextRange *range = [tv textRangeFromPosition:position toPosition:position];
-  tv.selectedTextRange = range;
+    // failsafe for over edge position crash.
+    if (!position)
+      return;
+    UITextRange *range = [tv textRangeFromPosition:position toPosition:position];
+    tv.selectedTextRange = range;
+  } else {
+    // for iOS 4
+    NSRange currentRange;
+    if ([tv respondsToSelector:@selector(selectionRange)])
+      currentRange = [tv selectionRange];
+    else if ([tv respondsToSelector:@selector(selectedRange)])
+      currentRange = [tv selectedRange];
+
+    NSInteger location = isLeftSwipe ? --currentRange.location : ++currentRange.location;
+    if (location < 0)
+      location = 0;
+    else if (location > tv.text.length)
+      location = tv.text.length;
+
+    NSRange range = NSMakeRange(location, 0);
+    if ([tv respondsToSelector:@selector(setSelectedRange:)])
+      [tv setSelectedRange:range];
+    else if ([tv respondsToSelector:@selector(setSelectionRange:)])
+      [tv setSelectionRange:range];
+  }
+
   // reveal for UITextField.
   [[%c(UIFieldEditor) sharedFieldEditor] revealSelection];
   // reveal for UITextView, UITextContentView and UIWebDocumentView.
