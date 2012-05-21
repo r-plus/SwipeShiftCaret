@@ -8,7 +8,7 @@
 static UIView *tv;
 static BOOL panGestureEnabled;
 static BOOL fasterByVelocityIsEnabled;
-static BOOL shiftHeldDown = NO;
+static BOOL isSelectionMode = NO;
 
 @interface UIView (Private) <UITextInput>
 - (NSRange)selectedRange;
@@ -165,21 +165,21 @@ static void PopupMenu(CGRect rect)
   UIKBKey *kb = [self keyHitTest:[touch locationInView:touch.view]];
   NSString *kbString = [kb displayString];
   if ([kbString isEqualToString:@"あいう"] || [kbString isEqualToString:@"ABC"] || [kbString isEqualToString:@"☆123"] || [kbString isEqualToString:@"123"])
-    shiftHeldDown = YES;
+    isSelectionMode = YES;
   else
-    shiftHeldDown = NO;
+    isSelectionMode = NO;
 }
 
 - (void)touchesCancelled:(id)arg1 withEvent:(id)arg2
 {
   %orig;
-  shiftHeldDown = NO;
+  isSelectionMode = NO;
 }
 
 - (void)touchesEnded:(id)arg1 withEvent:(id)arg2
 {
   %orig;
-  shiftHeldDown = NO;
+  isSelectionMode = NO;
 }
 %end
 
@@ -238,13 +238,13 @@ static void PopupMenu(CGRect rect)
     numberOfTouches = touchesCount;
 
   UIKeyboardImpl *keyboardImpl = [%c(UIKeyboardImpl) sharedInstance];
-  if ([keyboardImpl respondsToSelector:@selector(callLayoutIsShiftKeyBeingHeld)] && !shiftHeldDown)
-    shiftHeldDown = [keyboardImpl callLayoutIsShiftKeyBeingHeld];
+  if ([keyboardImpl respondsToSelector:@selector(callLayoutIsShiftKeyBeingHeld)] && !isSelectionMode)
+    isSelectionMode = [keyboardImpl callLayoutIsShiftKeyBeingHeld];
 
   if (gesture.state == UIGestureRecognizerStateEnded || gesture.state == UIGestureRecognizerStateCancelled) {
     // cleanup
     numberOfTouches = 0;
-    //shiftHeldDown = NO;
+    //isSelectionMode = NO;
     prevVelo = CGPointMake(0,0);
     isLeftPanning = YES;
     hasStarted = NO;
@@ -317,7 +317,7 @@ static void PopupMenu(CGRect rect)
         return;
 
       UITextRange *range;
-      if (!shiftHeldDown)
+      if (!isSelectionMode)
         range = [tv textRangeFromPosition:position toPosition:position];
       else {
         if (startTextRange.isEmpty)
@@ -334,7 +334,7 @@ static void PopupMenu(CGRect rect)
       location += pointsChanged;
       int selectedLength = startRange.length;
       
-      if (shiftHeldDown) {
+      if (isSelectionMode) {
         if (pointsChanged < 0) {
           if (startRange.length == 0) {
             selectedLength += abs(pointsChanged);
