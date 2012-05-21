@@ -164,7 +164,11 @@ static void PopupMenu(CGRect rect)
   UITouch *touch = [touches anyObject];
   UIKBKey *kb = [self keyHitTest:[touch locationInView:touch.view]];
   NSString *kbString = [kb displayString];
-  if ([kbString isEqualToString:@"あいう"] || [kbString isEqualToString:@"ABC"] || [kbString isEqualToString:@"☆123"] || [kbString isEqualToString:@"123"])
+  if ([kbString isEqualToString:@"あいう"] ||
+      [kbString isEqualToString:@"ABC"] ||
+      [kbString isEqualToString:@"☆123"] ||
+      [kbString isEqualToString:@"123"] ||
+      [kbString isEqualToString:@"shift"])
     isSelectionMode = YES;
   else
     isSelectionMode = NO;
@@ -236,10 +240,6 @@ static void PopupMenu(CGRect rect)
   int touchesCount = [gesture numberOfTouches];
   if (touchesCount > numberOfTouches)
     numberOfTouches = touchesCount;
-
-  UIKeyboardImpl *keyboardImpl = [%c(UIKeyboardImpl) sharedInstance];
-  if ([keyboardImpl respondsToSelector:@selector(callLayoutIsShiftKeyBeingHeld)] && !isSelectionMode)
-    isSelectionMode = [keyboardImpl callLayoutIsShiftKeyBeingHeld];
 
   if (gesture.state == UIGestureRecognizerStateEnded || gesture.state == UIGestureRecognizerStateCancelled) {
     // cleanup
