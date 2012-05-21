@@ -191,10 +191,9 @@ static void PopupMenu(CGRect rect)
 - (BOOL)becomeFirstResponder
 {
   BOOL tmp = %orig;
-  if ((tmp && [self respondsToSelector:@selector(setSelectedTextRange:)])
-      || [self respondsToSelector:@selector(setSelectedRange:)]
-      || [self respondsToSelector:@selector(setSelectionRange:)]
-      ) {
+  if (tmp && ([self respondsToSelector:@selector(setSelectedTextRange:)] ||
+       [self respondsToSelector:@selector(setSelectedRange:)] ||
+       [self respondsToSelector:@selector(setSelectionRange:)])) {
     tv = self;
     if (panGestureEnabled)
       InstallPanGestureRecognizer();
@@ -244,7 +243,6 @@ static void PopupMenu(CGRect rect)
   if (gesture.state == UIGestureRecognizerStateEnded || gesture.state == UIGestureRecognizerStateCancelled) {
     // cleanup
     numberOfTouches = 0;
-    //isSelectionMode = NO;
     prevVelo = CGPointMake(0,0);
     isLeftPanning = YES;
     hasStarted = NO;
@@ -252,9 +250,11 @@ static void PopupMenu(CGRect rect)
     if ([tv respondsToSelector:@selector(positionFromPosition:inDirection:offset:)])
       [startTextRange release];
     startTextRange = nil;
+
     // reveal for UITextView, UITextContentView and UIWebDocumentView.
     if ([tv respondsToSelector:@selector(scrollSelectionToVisible:)])
       [tv scrollSelectionToVisible:YES];
+
     // auto pop-up menu.
     if ([tv respondsToSelector:@selector(selectedTextRange)]) {
       UITextRange *range = tv.selectedTextRange;
@@ -271,14 +271,18 @@ static void PopupMenu(CGRect rect)
       if (range.length)
         PopupMenu([tv textRectForBounds:tv.bounds]);
     }
+
   } else if (gesture.state == UIGestureRecognizerStateBegan) {
+
     if ([tv respondsToSelector:@selector(positionFromPosition:inDirection:offset:)])
       startTextRange = [tv.selectedTextRange retain];
     else if ([tv respondsToSelector:@selector(selectedRange)])
       startRange = [tv selectedRange];
     else if ([tv respondsToSelector:@selector(selectionRange)])
       startRange = [tv selectionRange];
+
   } else if (gesture.state == UIGestureRecognizerStateChanged) {
+
     CGPoint offset = [gesture translationInView:self];
     if (!hasStarted && abs(offset.x) < 16)
       return;
