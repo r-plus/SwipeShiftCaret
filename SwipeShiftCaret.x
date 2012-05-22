@@ -164,7 +164,10 @@ static void PopupMenu(CGRect rect)
   UITouch *touch = [touches anyObject];
   UIKBKey *kb = [self keyHitTest:[touch locationInView:touch.view]];
   NSString *kbString = [kb displayString];
-  if ([kbString isEqualToString:@"あいう"] || [kbString isEqualToString:@"ABC"] || [kbString isEqualToString:@"☆123"] || [kbString isEqualToString:@"123"])
+  if ([kbString isEqualToString:@"あいう"] ||
+      [kbString isEqualToString:@"ABC"] ||
+      [kbString isEqualToString:@"☆123"] ||
+      [kbString isEqualToString:@"123"])
     isSelectionMode = YES;
   else
     isSelectionMode = NO;
