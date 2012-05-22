@@ -245,15 +245,15 @@ static void PopupMenu(CGRect rect)
     numberOfTouches = 0;
     prevVelo = CGPointMake(0,0);
     isLeftPanning = YES;
-    hasStarted = NO;
     gesture.cancelsTouchesInView = NO;
     if ([tv respondsToSelector:@selector(positionFromPosition:inDirection:offset:)])
       [startTextRange release];
     startTextRange = nil;
 
     // reveal for UITextView, UITextContentView and UIWebDocumentView.
-    if ([tv respondsToSelector:@selector(scrollSelectionToVisible:)])
+    if ([tv respondsToSelector:@selector(scrollSelectionToVisible:)] && hasStarted)
       [tv scrollSelectionToVisible:YES];
+    hasStarted = NO;
 
     // auto pop-up menu.
     if ([tv respondsToSelector:@selector(selectedTextRange)]) {
