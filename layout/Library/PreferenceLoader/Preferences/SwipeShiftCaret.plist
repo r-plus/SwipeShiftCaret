@@ -17,11 +17,19 @@
     <array>
       <dict>
         <key>cell</key>
+        <string>PSGroupCell</string>
+        <key>label</key>
+        <string>SwipeShiftCaret</string>
+        <key>footerText</key>
+        <string>"Step": move 1 char. "Continual": move by finger position.</string>
+      </dict>
+      <dict>
+        <key>cell</key>
         <string>PSLinkListCell</string>
         <key>detail</key>
         <string>PSListItemsController</string>
         <key>default</key>
-        <integer>1</integer>
+        <true/>
         <key>defaults</key>
         <string>jp.r-plus.SwipeShiftCaret</string>
         <key>key</key>
@@ -37,8 +45,8 @@
         </array>
         <key>validValues</key>
         <array>
-          <integer>0</integer>
-          <integer>1</integer>
+          <false/>
+          <true/>
         </array>
       </dict>
       <dict>
