@@ -86,6 +86,10 @@ static BOOL isSelectionMode = NO;
 static void InstallSwipeGestureRecognizer()
 {
   if ([tv isKindOfClass:[UIView class]]) {
+    for (UIGestureRecognizer *gesture in [tv gestureRecognizers])
+      if ([gesture isMemberOfClass:[SCPanGestureRecognizer class]])
+        [tv removeGestureRecognizer:gesture];
+
     SCSwipeGestureRecognizer *rightSwipeShiftCaret = [[SCSwipeGestureRecognizer alloc] initWithTarget:tv action:@selector(rightSwipeShiftCaret:)];
     rightSwipeShiftCaret.direction = UISwipeGestureRecognizerDirectionRight;
     [tv addGestureRecognizer:rightSwipeShiftCaret];
@@ -408,14 +412,10 @@ static void LoadSettings()
   id existVelocity = [dict objectForKey:@"VelocityEnabled"];
   fasterByVelocityIsEnabled = existVelocity ? [existVelocity boolValue] : NO;
   if (tv) {
-    if (panGestureEnabled) {
+    if (panGestureEnabled)
       InstallPanGestureRecognizer();
-    } else {
+    else
       InstallSwipeGestureRecognizer();
-      for (UIGestureRecognizer *gesture in [tv gestureRecognizers])
-        if ([gesture isMemberOfClass:[SCPanGestureRecognizer class]])
-          [tv removeGestureRecognizer:gesture];
-    }
   }
 }
 
