@@ -7,6 +7,7 @@
 
 static UIView *tv;
 static BOOL panGestureEnabled;
+static BOOL caretMagnifierIsEnabled;
 static BOOL fasterByVelocityIsEnabled;
 static BOOL isSelectionMode = NO;
 
@@ -18,6 +19,7 @@ static BOOL isSelectionMode = NO;
 - (void)scrollSelectionToVisible:(BOOL)arg1;
 - (CGRect)rectForSelection:(NSRange)range;
 - (CGRect)textRectForBounds:(CGRect)rect;
+- (id)content;
 @property(copy) NSString *text;
 @end
 
@@ -34,6 +36,27 @@ static BOOL isSelectionMode = NO;
 @interface UIKeyboardLayoutStar : NSObject
 - (UIKBKey *)keyHitTest:(CGPoint)arg;
 - (NSString *)displayString;
+@end
+
+@interface UITextMagnifierCaret : UIView
++ (id)sharedCaretMagnifier;
+- (void)zoomUpAnimation;
+- (void)zoomDownAnimation;
+- (void)stopMagnifying:(BOOL)arg1;
+- (void)setToMagnifierRenderer;
+- (void)setOffset:(CGPoint)arg1;
+- (void)setMagnificationPoint:(CGPoint)arg1;
+- (void)setText:(id)arg1;
+- (void)setTarget:(id)arg1;
+@end
+
+@interface UITextMagnifierRanged : UIView
++ (id)sharedRangedMagnifier;
+- (void)stopMagnifying:(BOOL)arg1;
+@end
+
+@interface UITextEffectsWindow : NSObject
++ (id)sharedTextEffectsWindowAboveStatusBar;
 @end
 
 @interface SCSwipeGestureRecognizer : UISwipeGestureRecognizer
@@ -232,6 +255,7 @@ static void PopupMenu(CGRect rect)
   if (!panGestureEnabled)
     return;
 
+  static BOOL zoomUpAnimationStarted = NO;
   static BOOL hasStarted = NO;
   static BOOL isLeftPanning = YES;
   static UITextRange *startTextRange;
@@ -256,6 +280,12 @@ static void PopupMenu(CGRect rect)
     if ([tv respondsToSelector:@selector(positionFromPosition:inDirection:offset:)])
       [startTextRange release];
     startTextRange = nil;
+
+    if (caretMagnifierIsEnabled) {
+      zoomUpAnimationStarted = NO;
+      [[%c(UITextMagnifierRanged) sharedRangedMagnifier] stopMagnifying:YES];
+      [[%c(UITextMagnifierCaret) sharedCaretMagnifier] zoomDownAnimation];
+    }
 
     // reveal for UITextView, UITextContentView and UIWebDocumentView.
     if ([tv respondsToSelector:@selector(scrollSelectionToVisible:)] && hasStarted)
@@ -310,6 +340,7 @@ static void PopupMenu(CGRect rect)
     int scale = 16 / numberOfTouches ? : 1;
     int pointsChanged = offset.x / scale;
 
+
     // for iOS 5+ and UIWebDocumentView 4+
     if ([tv respondsToSelector:@selector(positionFromPosition:inDirection:offset:)]) {
       UITextPosition *position = nil;
@@ -327,6 +358,48 @@ static void PopupMenu(CGRect rect)
       if (!position)
         return;
 
+      // CaretMagnifier
+      if (caretMagnifierIsEnabled) {
+        id magni = [%c(UITextMagnifierCaret) sharedCaretMagnifier];
+        UITextPosition *positionForMagnifier;
+        int changedOffsetFromBeginningOfDocument = [self offsetFromPosition:self.beginningOfDocument toPosition:position];
+        if (startTextRange.isEmpty) {
+          int offsetFromBeginningOfDocument = [self offsetFromPosition:self.beginningOfDocument toPosition:startTextRange.start];
+          if (offsetFromBeginningOfDocument > changedOffsetFromBeginningOfDocument)
+            positionForMagnifier = self.selectedTextRange.start;
+          else
+            positionForMagnifier = self.selectedTextRange.end;
+        } else {
+          if (isLeftPanning) {
+            int offsetFromBeginningOfDocumentToSelectedEnd = [self offsetFromPosition:self.beginningOfDocument toPosition:startTextRange.end];
+            if (offsetFromBeginningOfDocumentToSelectedEnd > changedOffsetFromBeginningOfDocument)
+              positionForMagnifier = self.selectedTextRange.start;
+            else
+              positionForMagnifier = self.selectedTextRange.end;
+          } else {
+            int offsetFromBeginningOfDocumentToSelectedStart = [self offsetFromPosition:self.beginningOfDocument toPosition:startTextRange.start];
+            if (offsetFromBeginningOfDocumentToSelectedStart > changedOffsetFromBeginningOfDocument)
+              positionForMagnifier = self.selectedTextRange.start;
+            else
+              positionForMagnifier = self.selectedTextRange.end;
+          }
+        }
+        CGRect caretRect = [self caretRectForPosition:positionForMagnifier];
+        CGPoint caretPoint = caretRect.origin;
+        [magni setTarget:tv];
+        if ([tv respondsToSelector:@selector(content)])
+          [magni setText:[tv content]];
+        [magni setToMagnifierRenderer];
+        [[%c(UITextEffectsWindow) sharedTextEffectsWindowAboveStatusBar] addSubview:magni];
+        [magni setMagnificationPoint:caretPoint];
+        [magni setOffset:CGPointMake(0.0f,20.0f)];
+        if (!zoomUpAnimationStarted) {
+          [magni zoomUpAnimation];
+          zoomUpAnimationStarted = YES;
+        }
+      }
+
+      // ShiftCaret
       UITextRange *range;
       if (!isSelectionMode)
         range = [tv textRangeFromPosition:position toPosition:position];
@@ -339,6 +412,7 @@ static void PopupMenu(CGRect rect)
       tv.selectedTextRange = range;
       // reveal for UITextField.
       [[%c(UIFieldEditor) sharedFieldEditor] revealSelection];
+
     } else {
       // for iOS 4
       int location = startRange.location;
@@ -411,6 +485,8 @@ static void LoadSettings()
   panGestureEnabled = existPanGesture ? [existPanGesture boolValue] : YES;
   id existVelocity = [dict objectForKey:@"VelocityEnabled"];
   fasterByVelocityIsEnabled = existVelocity ? [existVelocity boolValue] : NO;
+  id existCaretMagnifier = [dict objectForKey:@"CaretMagnifierEnabled"];
+  caretMagnifierIsEnabled = existCaretMagnifier ? [existCaretMagnifier boolValue] : NO;
   if (tv) {
     if (panGestureEnabled)
       InstallPanGestureRecognizer();

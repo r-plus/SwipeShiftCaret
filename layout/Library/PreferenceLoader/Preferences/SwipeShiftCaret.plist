@@ -18,10 +18,8 @@
       <dict>
         <key>cell</key>
         <string>PSGroupCell</string>
-        <key>label</key>
-        <string>SwipeShiftCaret</string>
         <key>footerText</key>
-        <string>"Step": move 1 char. "Continual": move by finger position.</string>
+        <string>"Step": move 1 char.</string>
       </dict>
       <dict>
         <key>cell</key>
@@ -54,6 +52,20 @@
         <string>PSGroupCell</string>
         <key>label</key>
         <string>Continual Move Options</string>
+      </dict>
+      <dict>
+        <key>cell</key>
+        <string>PSSwitchCell</string>
+        <key>default</key>
+        <false/>
+        <key>defaults</key>
+        <string>jp.r-plus.SwipeShiftCaret</string>
+        <key>key</key>
+        <string>CaretMagnifierEnabled</string>
+        <key>label</key>
+        <string>Caret Magnifier(iOS5+)</string>
+        <key>PostNotification</key>
+        <string>jp.r-plus.swipeshiftcaret.settingschanged</string>
       </dict>
       <dict>
         <key>cell</key>
