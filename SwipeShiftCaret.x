@@ -320,7 +320,7 @@ static void PopupMenu(CGRect rect)
 
   } else if (gesture.state == UIGestureRecognizerStateChanged) {
 
-    CGPoint offset = [gesture translationInView:self];
+    CGPoint offset = [gesture translationInView:tv];
     if (!hasStarted && abs(offset.x) < 16)
       return;
     if (!hasStarted && abs(offset.x) < abs(offset.y)) {
@@ -332,7 +332,7 @@ static void PopupMenu(CGRect rect)
     gesture.cancelsTouchesInView = YES;
     hasStarted = YES;
     if (fasterByVelocityIsEnabled) {
-      CGPoint velo = [gesture velocityInView:self];
+      CGPoint velo = [gesture velocityInView:tv];
       if (abs(prevVelo.x) < 1000 && abs(velo.x) / 1000 != 0)
         numberOfTouches += (abs(velo.x) / 1000);
       prevVelo = velo;
@@ -362,29 +362,29 @@ static void PopupMenu(CGRect rect)
       if (caretMagnifierIsEnabled) {
         id magni = [%c(UITextMagnifierCaret) sharedCaretMagnifier];
         UITextPosition *positionForMagnifier;
-        int changedOffsetFromBeginningOfDocument = [self offsetFromPosition:self.beginningOfDocument toPosition:position];
+        int changedOffsetFromBeginningOfDocument = [tv offsetFromPosition:tv.beginningOfDocument toPosition:position];
         if (startTextRange.isEmpty) {
-          int offsetFromBeginningOfDocument = [self offsetFromPosition:self.beginningOfDocument toPosition:startTextRange.start];
+          int offsetFromBeginningOfDocument = [tv offsetFromPosition:tv.beginningOfDocument toPosition:startTextRange.start];
           if (offsetFromBeginningOfDocument > changedOffsetFromBeginningOfDocument)
-            positionForMagnifier = self.selectedTextRange.start;
+            positionForMagnifier = tv.selectedTextRange.start;
           else
-            positionForMagnifier = self.selectedTextRange.end;
+            positionForMagnifier = tv.selectedTextRange.end;
         } else {
           if (isLeftPanning) {
-            int offsetFromBeginningOfDocumentToSelectedEnd = [self offsetFromPosition:self.beginningOfDocument toPosition:startTextRange.end];
+            int offsetFromBeginningOfDocumentToSelectedEnd = [tv offsetFromPosition:tv.beginningOfDocument toPosition:startTextRange.end];
             if (offsetFromBeginningOfDocumentToSelectedEnd > changedOffsetFromBeginningOfDocument)
-              positionForMagnifier = self.selectedTextRange.start;
+              positionForMagnifier = tv.selectedTextRange.start;
             else
-              positionForMagnifier = self.selectedTextRange.end;
+              positionForMagnifier = tv.selectedTextRange.end;
           } else {
-            int offsetFromBeginningOfDocumentToSelectedStart = [self offsetFromPosition:self.beginningOfDocument toPosition:startTextRange.start];
+            int offsetFromBeginningOfDocumentToSelectedStart = [tv offsetFromPosition:tv.beginningOfDocument toPosition:startTextRange.start];
             if (offsetFromBeginningOfDocumentToSelectedStart > changedOffsetFromBeginningOfDocument)
-              positionForMagnifier = self.selectedTextRange.start;
+              positionForMagnifier = tv.selectedTextRange.start;
             else
-              positionForMagnifier = self.selectedTextRange.end;
+              positionForMagnifier = tv.selectedTextRange.end;
           }
         }
-        CGRect caretRect = [self caretRectForPosition:positionForMagnifier];
+        CGRect caretRect = [tv caretRectForPosition:positionForMagnifier];
         CGPoint caretPoint = caretRect.origin;
         [magni setTarget:tv];
         if ([tv respondsToSelector:@selector(content)])
