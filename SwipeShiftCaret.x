@@ -108,6 +108,8 @@ static BOOL isSelectionMode = NO;
 
 static void InstallSwipeGestureRecognizer()
 {
+  // if this uninstall pan gesture is nothing, should implement 'if (panGestureEnabled) return;' code
+  // top of ShiftCaret function.
   if ([tv isKindOfClass:[UIView class]]) {
     for (UIGestureRecognizer *gesture in [tv gestureRecognizers])
       if ([gesture isMemberOfClass:[SCPanGestureRecognizer class]])
@@ -137,9 +139,6 @@ static void InstallPanGestureRecognizer()
 
 static void ShiftCaret(BOOL isLeftSwipe)
 {
-  if (panGestureEnabled)
-    return;
-
   if ([tv respondsToSelector:@selector(positionFromPosition:inDirection:offset:)]) {
     UITextPosition *position = nil;
     position = isLeftSwipe ? [tv positionFromPosition:tv.selectedTextRange.start inDirection:UITextLayoutDirectionLeft offset:1]
