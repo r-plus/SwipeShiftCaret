@@ -9,7 +9,9 @@ static UIView *tv;
 static BOOL panGestureEnabled;
 static BOOL caretMagnifierIsEnabled;
 static BOOL fasterByVelocityIsEnabled;
+static BOOL lockVerticalScrollIsEnabled;
 static BOOL isSelectionMode = NO;
+static BOOL hasStarted = NO;
 
 @interface UIView (Private) <UITextInput>
 - (NSRange)selectedRange;
@@ -101,6 +103,8 @@ static BOOL isSelectionMode = NO;
       [gesture isKindOfClass:[UISwipeGestureRecognizer class]]) &&
       // Don't prevent SwipeNav
       ![gesture isMemberOfClass:%c(SNSwipeGestureRecognizer)])
+    return YES;
+  if (hasStarted && lockVerticalScrollIsEnabled && [gesture isKindOfClass:[UIPanGestureRecognizer class]])
     return YES;
   return NO;
 }
@@ -255,7 +259,6 @@ static void PopupMenu(CGRect rect)
     return;
 
   static BOOL zoomUpAnimationStarted = NO;
-  static BOOL hasStarted = NO;
   static BOOL isLeftPanning = YES;
   static UITextRange *startTextRange;
   static NSRange startRange;
@@ -486,6 +489,8 @@ static void LoadSettings()
   fasterByVelocityIsEnabled = existVelocity ? [existVelocity boolValue] : NO;
   id existCaretMagnifier = [dict objectForKey:@"CaretMagnifierEnabled"];
   caretMagnifierIsEnabled = existCaretMagnifier ? [existCaretMagnifier boolValue] : NO;
+  id existLockVerticalScrollIsEnabled = [dict objectForKey:@"LockVerticalScrollEnabled"];
+  lockVerticalScrollIsEnabled = existLockVerticalScrollIsEnabled ? [existLockVerticalScrollIsEnabled boolValue] : NO;
   if (tv) {
     if (panGestureEnabled)
       InstallPanGestureRecognizer();
