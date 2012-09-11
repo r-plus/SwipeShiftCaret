@@ -91,7 +91,7 @@
         <key>key</key>
         <string>LockVerticalScrollEnabled</string>
         <key>label</key>
-        <string>Lock v.scroll</string>
+        <string>V.Scroll Lock</string>
         <key>PostNotification</key>
         <string>jp.r-plus.swipeshiftcaret.settingschanged</string>
       </dict>
