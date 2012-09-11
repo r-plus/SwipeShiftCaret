@@ -9,7 +9,7 @@ static UIView *tv;
 static BOOL panGestureEnabled;
 static BOOL caretMagnifierIsEnabled;
 static BOOL fasterByVelocityIsEnabled;
-static BOOL lockVerticalScrollIsEnabled;
+static BOOL verticalScrollLockIsEnabled;
 static BOOL isSelectionMode = NO;
 static BOOL hasStarted = NO;
 
@@ -76,10 +76,12 @@ static BOOL hasStarted = NO;
 }
 
 - (BOOL)canPreventGestureRecognizer:(UIGestureRecognizer *)gesture {
-  if ([gesture isKindOfClass:[UISwipeGestureRecognizer class]] &&
-      // Don't prevent SwipeNav
-      ![gesture isMemberOfClass:%c(SNSwipeGestureRecognizer)])
+  // Prevent duplicated myself
+  if ([gesture isMemberOfClass:[SCSwipeGestureRecognizer class]])
     return YES;
+  // Don't prevent SwipeNav
+  if ([gesture isMemberOfClass:%c(SNSwipeGestureRecognizer)])
+    return NO;
   return NO;
 }
 @end
@@ -99,12 +101,14 @@ static BOOL hasStarted = NO;
 }
 
 - (BOOL)canPreventGestureRecognizer:(UIGestureRecognizer *)gesture {
-  if (([gesture isMemberOfClass:[SCPanGestureRecognizer class]] ||
-      [gesture isKindOfClass:[UISwipeGestureRecognizer class]]) &&
-      // Don't prevent SwipeNav
-      ![gesture isMemberOfClass:%c(SNSwipeGestureRecognizer)])
+  // Prevent duplicated myself
+  if ([gesture isMemberOfClass:[SCPanGestureRecognizer class]])
     return YES;
-  if (hasStarted && lockVerticalScrollIsEnabled && [gesture isKindOfClass:[UIPanGestureRecognizer class]])
+  // Don't prevent SwipeNav
+  if ([gesture isMemberOfClass:%c(SNSwipeGestureRecognizer)])
+    return NO;
+  // v.scroll lock option
+  if (hasStarted && verticalScrollLockIsEnabled && [gesture isKindOfClass:[UIPanGestureRecognizer class]])
     return YES;
   return NO;
 }
@@ -489,8 +493,8 @@ static void LoadSettings()
   fasterByVelocityIsEnabled = existVelocity ? [existVelocity boolValue] : NO;
   id existCaretMagnifier = [dict objectForKey:@"CaretMagnifierEnabled"];
   caretMagnifierIsEnabled = existCaretMagnifier ? [existCaretMagnifier boolValue] : NO;
-  id existLockVerticalScrollIsEnabled = [dict objectForKey:@"LockVerticalScrollEnabled"];
-  lockVerticalScrollIsEnabled = existLockVerticalScrollIsEnabled ? [existLockVerticalScrollIsEnabled boolValue] : NO;
+  id existVerticalScrollLockIsEnabled = [dict objectForKey:@"LockVerticalScrollEnabled"];
+  verticalScrollLockIsEnabled = existVerticalScrollLockIsEnabled ? [existVerticalScrollLockIsEnabled boolValue] : NO;
   if (tv) {
     if (panGestureEnabled)
       InstallPanGestureRecognizer();
