@@ -12,6 +12,7 @@ static BOOL fasterByVelocityIsEnabled;
 static BOOL verticalScrollLockIsEnabled;
 static BOOL isSelectionMode = NO;
 static BOOL hasStarted = NO;
+static BOOL globalDisable = NO;
 
 @interface UIView (Private) <UITextInput>
 - (NSRange)selectedRange;
@@ -147,6 +148,9 @@ static void InstallPanGestureRecognizer()
 
 static void ShiftCaret(BOOL isLeftSwipe)
 {
+  if (globalDisable)
+    return;
+
   if ([tv respondsToSelector:@selector(positionFromPosition:inDirection:offset:)]) {
     UITextPosition *position = nil;
     position = isLeftSwipe ? [tv positionFromPosition:tv.selectedTextRange.start inDirection:UITextLayoutDirectionLeft offset:1]
@@ -259,7 +263,7 @@ static void PopupMenu(CGRect rect)
 %new(v@:@)
 - (void)SCPanGestureDidPan:(UIPanGestureRecognizer *)gesture
 {
-  if (!panGestureEnabled)
+  if (!panGestureEnabled || globalDisable)
     return;
 
   static BOOL zoomUpAnimationStarted = NO;
@@ -500,6 +504,12 @@ static void LoadSettings()
       InstallPanGestureRecognizer();
     else
       InstallSwipeGestureRecognizer();
+  }
+  NSString *bundleIdentifier = [NSBundle mainBundle].bundleIdentifier;
+  if (bundleIdentifier) {
+    NSString *key = [@"SSCDisable-" stringByAppendingString:bundleIdentifier];
+    id disablePref = [dict objectForKey:key];
+    globalDisable = disablePref ? [disablePref boolValue] : NO;
   }
 }
 
