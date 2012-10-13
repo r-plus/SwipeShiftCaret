@@ -1,3 +1,4 @@
+ARCHS = armv7
 include theos/makefiles/common.mk
 
 TWEAK_NAME = SwipeShiftCaret
