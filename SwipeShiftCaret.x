@@ -9,6 +9,7 @@ static UIView *tv;
 static BOOL panGestureEnabled;
 static BOOL fasterByVelocityIsEnabled;
 static BOOL verticalScrollLockIsEnabled;
+static BOOL verticalScrollLockAnsMoveIsEnabled;
 static BOOL isSelectionMode = NO;
 static BOOL hasStarted = NO;
 
@@ -111,8 +112,9 @@ static BOOL hasStarted = NO;
     if ([gesture isMemberOfClass:%c(SNSwipeGestureRecognizer)])
         return NO;
     // v.scroll lock option
-    if (hasStarted && verticalScrollLockIsEnabled && [gesture isKindOfClass:[UIPanGestureRecognizer class]])
-        return YES;
+    if (hasStarted && [gesture isKindOfClass:[UIPanGestureRecognizer class]])
+        if (verticalScrollLockIsEnabled || verticalScrollLockAnsMoveIsEnabled)
+            return YES;
     return NO;
 }
 @end
@@ -341,20 +343,26 @@ static void PopupMenu(CGRect rect)
         }
         int scale = 16 / numberOfTouches ? : 1;
         int pointsChanged = offset.x / scale;
-
+        int yPointsChanged = offset.y / scale;
 
         // for iOS 5+ and UIWebDocumentView 4+
         if ([tv respondsToSelector:@selector(positionFromPosition:inDirection:offset:)]) {
             UITextPosition *position = nil;
             if ([tv respondsToSelector:@selector(positionFromPosition:inDirection:offset:)]) {
-                if (startTextRange.isEmpty)
+                if (startTextRange.isEmpty) {
                     position = [tv positionFromPosition:startTextRange.start
-                        inDirection:pointsChanged < 0 ? UITextLayoutDirectionLeft : UITextLayoutDirectionRight
-                        offset:abs(pointsChanged)];
-                else
+                                            inDirection:pointsChanged < 0 ? UITextLayoutDirectionLeft : UITextLayoutDirectionRight
+                                                 offset:abs(pointsChanged)];
+                } else {
                     position = [tv positionFromPosition:isLeftPanning ? startTextRange.start : startTextRange.end
-                        inDirection:pointsChanged < 0 ? UITextLayoutDirectionLeft : UITextLayoutDirectionRight
-                        offset:abs(pointsChanged)];
+                                            inDirection:pointsChanged < 0 ? UITextLayoutDirectionLeft : UITextLayoutDirectionRight
+                                                 offset:abs(pointsChanged)];
+                }
+                if (verticalScrollLockAnsMoveIsEnabled) {
+                    position = [tv positionFromPosition:position
+                                            inDirection:yPointsChanged < 0 ? UITextLayoutDirectionUp : UITextLayoutDirectionDown
+                                                 offset:abs(yPointsChanged)];
+                }
             }
             // failsafe for over edge position crash.
             if (!position)
@@ -442,12 +450,14 @@ static void PopupMenu(CGRect rect)
 static void LoadSettings()
 {	
     NSDictionary *dict = [NSDictionary dictionaryWithContentsOfFile:PREF_PATH];
-    id existPanGesture = [dict objectForKey:@"PanGestureEnabled"];
-    panGestureEnabled = existPanGesture ? [existPanGesture boolValue] : YES;
-    id existVelocity = [dict objectForKey:@"VelocityEnabled"];
-    fasterByVelocityIsEnabled = existVelocity ? [existVelocity boolValue] : NO;
-    id existVerticalScrollLockIsEnabled = [dict objectForKey:@"LockVerticalScrollEnabled"];
-    verticalScrollLockIsEnabled = existVerticalScrollLockIsEnabled ? [existVerticalScrollLockIsEnabled boolValue] : NO;
+    id panGesturePref = [dict objectForKey:@"PanGestureEnabled"];
+    panGestureEnabled = panGesturePref ? [panGesturePref boolValue] : YES;
+    id velocityPref = [dict objectForKey:@"VelocityEnabled"];
+    fasterByVelocityIsEnabled = velocityPref ? [velocityPref boolValue] : NO;
+    id verticalScrollLockPref = [dict objectForKey:@"LockVerticalScrollEnabled"];
+    verticalScrollLockIsEnabled = verticalScrollLockPref ? [verticalScrollLockPref boolValue] : NO;
+    id verticalScrollLockAndMovePref = [dict objectForKey:@"VLockAndMoveEnabled"];
+    verticalScrollLockAnsMoveIsEnabled = verticalScrollLockAndMovePref ? [verticalScrollLockAndMovePref boolValue] : NO;
     if (tv) {
         if (panGestureEnabled)
             InstallPanGestureRecognizer();

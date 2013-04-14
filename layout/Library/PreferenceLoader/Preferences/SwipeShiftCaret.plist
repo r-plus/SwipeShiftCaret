@@ -83,23 +83,34 @@
             </dict>
             <dict>
                 <key>cell</key>
+                <string>PSSwitchCell</string>
+                <key>default</key>
+                <false/>
+                <key>defaults</key>
+                <string>jp.r-plus.SwipeShiftCaret</string>
+                <key>key</key>
+                <string>VLockAndMoveEnabled</string>
+                <key>label</key>
+                <string>V.Scroll Lock and Move</string>
+                <key>PostNotification</key>
+                <string>jp.r-plus.swipeshiftcaret.settingschanged</string>
+                <key>pl_filter</key>
+                <dict>
+                    <key>CoreFoundationVersion</key>
+                    <array>
+                        <string>675.00</string>
+                    </array>
+                </dict>
+            </dict>
+            <dict>
+                <key>cell</key>
                 <string>PSGroupCell</string>
                 <key>label</key>
                 <string>Tips of Continual Move</string>
                 <key>isStaticText</key>
                 <true/>
-            </dict>
-            <dict>
-                <key>cell</key>
-                <string>PSStaticTextCell</string>
-                <key>label</key>
-                <string>- Faster moving by multi-touch</string>
-            </dict>
-            <dict>
-                <key>cell</key>
-                <string>PSStaticTextCell</string>
-                <key>label</key>
-                <string>- With hold shift key = select</string>
+                <key>footerText</key>
+                <string>- Faster moving by multi touch. - With hold shift key = select. - Vertical move must start horizontal swipe.</string>
             </dict>
             <dict>
                 <key>cell</key>
