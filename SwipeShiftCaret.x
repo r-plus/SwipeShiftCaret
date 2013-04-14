@@ -265,7 +265,6 @@ static void PopupMenu(CGRect rect)
     if (!panGestureEnabled)
         return;
 
-    static BOOL zoomUpAnimationStarted = NO;
     static BOOL isLeftPanning = YES;
     static UITextRange *startTextRange;
     static NSRange startRange;
