@@ -7,7 +7,6 @@
 
 static UIView *tv;
 static BOOL panGestureEnabled;
-static BOOL caretMagnifierIsEnabled;
 static BOOL fasterByVelocityIsEnabled;
 static BOOL verticalScrollLockIsEnabled;
 static BOOL isSelectionMode = NO;
@@ -291,12 +290,6 @@ static void PopupMenu(CGRect rect)
             [startTextRange release];
         startTextRange = nil;
 
-        if (caretMagnifierIsEnabled) {
-            zoomUpAnimationStarted = NO;
-            [[%c(UITextMagnifierRanged) sharedRangedMagnifier] stopMagnifying:YES];
-            [[%c(UITextMagnifierCaret) sharedCaretMagnifier] zoomDownAnimation];
-        }
-
         // reveal for UITextView, UITextContentView and UIWebDocumentView.
         if ([tv respondsToSelector:@selector(scrollSelectionToVisible:)] && hasStarted)
             [tv scrollSelectionToVisible:YES];
@@ -367,47 +360,6 @@ static void PopupMenu(CGRect rect)
             // failsafe for over edge position crash.
             if (!position)
                 return;
-
-            // CaretMagnifier
-            if (caretMagnifierIsEnabled) {
-                id magni = [%c(UITextMagnifierCaret) sharedCaretMagnifier];
-                UITextPosition *positionForMagnifier;
-                int changedOffsetFromBeginningOfDocument = [tv offsetFromPosition:tv.beginningOfDocument toPosition:position];
-                if (startTextRange.isEmpty) {
-                    int offsetFromBeginningOfDocument = [tv offsetFromPosition:tv.beginningOfDocument toPosition:startTextRange.start];
-                    if (offsetFromBeginningOfDocument > changedOffsetFromBeginningOfDocument)
-                        positionForMagnifier = tv.selectedTextRange.start;
-                    else
-                        positionForMagnifier = tv.selectedTextRange.end;
-                } else {
-                    if (isLeftPanning) {
-                        int offsetFromBeginningOfDocumentToSelectedEnd = [tv offsetFromPosition:tv.beginningOfDocument toPosition:startTextRange.end];
-                        if (offsetFromBeginningOfDocumentToSelectedEnd > changedOffsetFromBeginningOfDocument)
-                            positionForMagnifier = tv.selectedTextRange.start;
-                        else
-                            positionForMagnifier = tv.selectedTextRange.end;
-                    } else {
-                        int offsetFromBeginningOfDocumentToSelectedStart = [tv offsetFromPosition:tv.beginningOfDocument toPosition:startTextRange.start];
-                        if (offsetFromBeginningOfDocumentToSelectedStart > changedOffsetFromBeginningOfDocument)
-                            positionForMagnifier = tv.selectedTextRange.start;
-                        else
-                            positionForMagnifier = tv.selectedTextRange.end;
-                    }
-                }
-                CGRect caretRect = [tv caretRectForPosition:positionForMagnifier];
-                CGPoint caretPoint = caretRect.origin;
-                [magni setTarget:tv];
-                if ([tv respondsToSelector:@selector(content)])
-                    [magni setText:[tv content]];
-                [magni setToMagnifierRenderer];
-                [[%c(UITextEffectsWindow) sharedTextEffectsWindowAboveStatusBar] addSubview:magni];
-                [magni setMagnificationPoint:caretPoint];
-                [magni setOffset:CGPointMake(0.0f,20.0f)];
-                if (!zoomUpAnimationStarted) {
-                    [magni zoomUpAnimation];
-                    zoomUpAnimationStarted = YES;
-                }
-            }
 
             // ShiftCaret
             UITextRange *range;
@@ -495,8 +447,6 @@ static void LoadSettings()
     panGestureEnabled = existPanGesture ? [existPanGesture boolValue] : YES;
     id existVelocity = [dict objectForKey:@"VelocityEnabled"];
     fasterByVelocityIsEnabled = existVelocity ? [existVelocity boolValue] : NO;
-    id existCaretMagnifier = [dict objectForKey:@"CaretMagnifierEnabled"];
-    caretMagnifierIsEnabled = existCaretMagnifier ? [existCaretMagnifier boolValue] : NO;
     id existVerticalScrollLockIsEnabled = [dict objectForKey:@"LockVerticalScrollEnabled"];
     verticalScrollLockIsEnabled = existVerticalScrollLockIsEnabled ? [existVerticalScrollLockIsEnabled boolValue] : NO;
     if (tv) {

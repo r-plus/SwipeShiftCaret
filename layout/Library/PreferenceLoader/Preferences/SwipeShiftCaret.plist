@@ -1,126 +1,112 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
-  <dict>
-    <key>title</key>
-    <string>SwipeShiftCaret</string>
-    <key>entry</key>
     <dict>
-      <key>cell</key>
-      <string>PSLinkCell</string>
-      <key>icon</key>
-      <string>SwipeShiftCaret.png</string>
-      <key>label</key>
-      <string>SwipeShiftCaret</string>
+        <key>title</key>
+        <string>SwipeShiftCaret</string>
+        <key>entry</key>
+        <dict>
+            <key>cell</key>
+            <string>PSLinkCell</string>
+            <key>icon</key>
+            <string>SwipeShiftCaret.png</string>
+            <key>label</key>
+            <string>SwipeShiftCaret</string>
+        </dict>
+        <key>items</key>
+        <array>
+            <dict>
+                <key>cell</key>
+                <string>PSGroupCell</string>
+                <key>footerText</key>
+                <string>"Step": move 1 char.</string>
+            </dict>
+            <dict>
+                <key>cell</key>
+                <string>PSLinkListCell</string>
+                <key>detail</key>
+                <string>PSListItemsController</string>
+                <key>default</key>
+                <true/>
+                <key>defaults</key>
+                <string>jp.r-plus.SwipeShiftCaret</string>
+                <key>key</key>
+                <string>PanGestureEnabled</string>
+                <key>label</key>
+                <string>Move Style</string>
+                <key>PostNotification</key>
+                <string>jp.r-plus.swipeshiftcaret.settingschanged</string>
+                <key>validTitles</key>
+                <array>
+                    <string>Step</string>
+                    <string>Continual</string>
+                </array>
+                <key>validValues</key>
+                <array>
+                    <false/>
+                    <true/>
+                </array>
+            </dict>
+            <dict>
+                <key>cell</key>
+                <string>PSGroupCell</string>
+                <key>label</key>
+                <string>Continual Move Options</string>
+            </dict>
+            <dict>
+                <key>cell</key>
+                <string>PSSwitchCell</string>
+                <key>default</key>
+                <false/>
+                <key>defaults</key>
+                <string>jp.r-plus.SwipeShiftCaret</string>
+                <key>key</key>
+                <string>VelocityEnabled</string>
+                <key>label</key>
+                <string>Faster by swipe speed</string>
+                <key>PostNotification</key>
+                <string>jp.r-plus.swipeshiftcaret.settingschanged</string>
+            </dict>
+            <dict>
+                <key>cell</key>
+                <string>PSSwitchCell</string>
+                <key>default</key>
+                <false/>
+                <key>defaults</key>
+                <string>jp.r-plus.SwipeShiftCaret</string>
+                <key>key</key>
+                <string>LockVerticalScrollEnabled</string>
+                <key>label</key>
+                <string>V.Scroll Lock</string>
+                <key>PostNotification</key>
+                <string>jp.r-plus.swipeshiftcaret.settingschanged</string>
+            </dict>
+            <dict>
+                <key>cell</key>
+                <string>PSGroupCell</string>
+                <key>label</key>
+                <string>Tips of Continual Move</string>
+                <key>isStaticText</key>
+                <true/>
+            </dict>
+            <dict>
+                <key>cell</key>
+                <string>PSStaticTextCell</string>
+                <key>label</key>
+                <string>- Faster moving by multi-touch</string>
+            </dict>
+            <dict>
+                <key>cell</key>
+                <string>PSStaticTextCell</string>
+                <key>label</key>
+                <string>- With hold shift key = select</string>
+            </dict>
+            <dict>
+                <key>cell</key>
+                <string>PSGroupCell</string>
+                <key>footerText</key>
+                <string>Author: @r_plus</string>
+            </dict>
+        </array>
     </dict>
-    <key>items</key>
-    <array>
-      <dict>
-        <key>cell</key>
-        <string>PSGroupCell</string>
-        <key>footerText</key>
-        <string>"Step": move 1 char.</string>
-      </dict>
-      <dict>
-        <key>cell</key>
-        <string>PSLinkListCell</string>
-        <key>detail</key>
-        <string>PSListItemsController</string>
-        <key>default</key>
-        <true/>
-        <key>defaults</key>
-        <string>jp.r-plus.SwipeShiftCaret</string>
-        <key>key</key>
-        <string>PanGestureEnabled</string>
-        <key>label</key>
-        <string>Move Style</string>
-        <key>PostNotification</key>
-        <string>jp.r-plus.swipeshiftcaret.settingschanged</string>
-        <key>validTitles</key>
-        <array>
-          <string>Step</string>
-          <string>Continual</string>
-        </array>
-        <key>validValues</key>
-        <array>
-          <false/>
-          <true/>
-        </array>
-      </dict>
-      <dict>
-        <key>cell</key>
-        <string>PSGroupCell</string>
-        <key>label</key>
-        <string>Continual Move Options</string>
-      </dict>
-      <dict>
-        <key>cell</key>
-        <string>PSSwitchCell</string>
-        <key>default</key>
-        <false/>
-        <key>defaults</key>
-        <string>jp.r-plus.SwipeShiftCaret</string>
-        <key>key</key>
-        <string>CaretMagnifierEnabled</string>
-        <key>label</key>
-        <string>Caret Magnifier(iOS5+)</string>
-        <key>PostNotification</key>
-        <string>jp.r-plus.swipeshiftcaret.settingschanged</string>
-      </dict>
-      <dict>
-        <key>cell</key>
-        <string>PSSwitchCell</string>
-        <key>default</key>
-        <false/>
-        <key>defaults</key>
-        <string>jp.r-plus.SwipeShiftCaret</string>
-        <key>key</key>
-        <string>VelocityEnabled</string>
-        <key>label</key>
-        <string>Faster by swipe speed</string>
-        <key>PostNotification</key>
-        <string>jp.r-plus.swipeshiftcaret.settingschanged</string>
-      </dict>
-      <dict>
-        <key>cell</key>
-        <string>PSSwitchCell</string>
-        <key>default</key>
-        <false/>
-        <key>defaults</key>
-        <string>jp.r-plus.SwipeShiftCaret</string>
-        <key>key</key>
-        <string>LockVerticalScrollEnabled</string>
-        <key>label</key>
-        <string>V.Scroll Lock</string>
-        <key>PostNotification</key>
-        <string>jp.r-plus.swipeshiftcaret.settingschanged</string>
-      </dict>
-      <dict>
-        <key>cell</key>
-        <string>PSGroupCell</string>
-        <key>label</key>
-        <string>Tips of Continual Move</string>
-        <key>isStaticText</key>
-        <true/>
-      </dict>
-      <dict>
-        <key>cell</key>
-        <string>PSStaticTextCell</string>
-        <key>label</key>
-        <string>- Faster moving by multi-touch</string>
-      </dict>
-      <dict>
-        <key>cell</key>
-        <string>PSStaticTextCell</string>
-        <key>label</key>
-        <string>- With hold shift key = select</string>
-      </dict>
-      <dict>
-        <key>cell</key>
-        <string>PSGroupCell</string>
-        <key>footerText</key>
-        <string>Author: @r_plus</string>
-      </dict>
-    </array>
-  </dict>
 </plist>
