@@ -1,6 +1,4 @@
 ###SwipeShiftCaret
-SwipeShiftCaret is OpenSource Implementation of SwipeToMoveCursor core feature for iOS 5+.
-
 Caret micromanager shift the caret 1 char or continual via swipe.
 
 ![](http://dl.dropbox.com/u/149268/swipeshiftcaret_a_GIFSoup.com.gif)
