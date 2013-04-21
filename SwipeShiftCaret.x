@@ -304,7 +304,7 @@ static void PopupMenuFromRect(CGRect rect)
 
         if ([webView respondsToSelector:@selector(positionFromPosition:inDirection:offset:)]) {
             UITextPosition *position = nil;
-            // Horizon Move.
+            // Horizontal Move.
             if (beginningTextRange.isEmpty) {
                 position = [webView positionFromPosition:beginningTextRange.start
                     inDirection:xPointChanged < 0 ? UITextLayoutDirectionLeft : UITextLayoutDirectionRight
