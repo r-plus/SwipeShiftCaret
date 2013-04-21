@@ -304,6 +304,7 @@ static void PopupMenuFromRect(CGRect rect)
 
         if ([webView respondsToSelector:@selector(positionFromPosition:inDirection:offset:)]) {
             UITextPosition *position = nil;
+            // Horizon Move.
             if (beginningTextRange.isEmpty) {
                 position = [webView positionFromPosition:beginningTextRange.start
                     inDirection:xPointChanged < 0 ? UITextLayoutDirectionLeft : UITextLayoutDirectionRight
@@ -313,6 +314,7 @@ static void PopupMenuFromRect(CGRect rect)
                     inDirection:xPointChanged < 0 ? UITextLayoutDirectionLeft : UITextLayoutDirectionRight
                     offset:abs(xPointChanged)];
             }
+            // Vertical Move.
             if (verticalScrollLockAnsMoveIsEnabled) {
                 position = [webView positionFromPosition:position
                     inDirection:yPointsChanged < 0 ? UITextLayoutDirectionUp : UITextLayoutDirectionDown
