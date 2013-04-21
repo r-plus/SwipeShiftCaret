@@ -40,11 +40,6 @@ static BOOL hasStarted = NO;
 - (NSString *)displayString;
 @end
 
-@interface UITextMagnifierRanged : UIView
-+ (id)sharedRangedMagnifier;
-- (void)stopMagnifying:(BOOL)arg1;
-@end
-
 @interface UITextEffectsWindow : NSObject
 + (id)sharedTextEffectsWindowAboveStatusBar;
 @end
