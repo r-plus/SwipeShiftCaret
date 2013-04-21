@@ -318,9 +318,10 @@ static void PopupMenuFromRect(CGRect rect)
                     inDirection:yPointsChanged < 0 ? UITextLayoutDirectionUp : UITextLayoutDirectionDown
                     offset:abs(yPointsChanged)];
             }
-            // failsafe for over edge position crash.
-            if (!position)
-                return;
+            // over edge correnction.
+            if (!position) {
+                position = xPointChanged < 0 ? webView.beginningOfDocument : webView.endOfDocument;
+            }
 
             // ShiftCaret
             UITextRange *range;
