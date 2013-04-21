@@ -40,10 +40,6 @@ static BOOL hasStarted = NO;
 - (NSString *)displayString;
 @end
 
-@interface UITextEffectsWindow : NSObject
-+ (id)sharedTextEffectsWindowAboveStatusBar;
-@end
-
 @interface SCSwipeGestureRecognizer : UISwipeGestureRecognizer
 @end
 
