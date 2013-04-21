@@ -77,7 +77,7 @@
                 <key>key</key>
                 <string>LockVerticalScrollEnabled</string>
                 <key>label</key>
-                <string>V.Scroll Lock</string>
+                <string>Vertical Scroll Lock</string>
                 <key>PostNotification</key>
                 <string>jp.r-plus.swipeshiftcaret.settingschanged</string>
             </dict>
@@ -91,7 +91,7 @@
                 <key>key</key>
                 <string>VLockAndMoveEnabled</string>
                 <key>label</key>
-                <string>V.Scroll Lock and Move</string>
+                <string>Vertical Move</string>
                 <key>PostNotification</key>
                 <string>jp.r-plus.swipeshiftcaret.settingschanged</string>
                 <key>pl_filter</key>
