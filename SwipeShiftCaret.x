@@ -199,7 +199,7 @@ static void PopupMenuFromRect(CGRect rect)
                 [self respondsToSelector:@selector(setSelectionRange:)])) {
         if ([self isKindOfClass:%c(UIWebDocumentView)]) {
             tv = webView = (UIWebDocumentView *)self;
-        } else {
+        } else if ([self respondsToSelector:@selector(webView)]) {
             tv = self;
             webView = [tv webView];
         }
