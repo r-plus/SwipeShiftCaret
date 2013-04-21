@@ -318,7 +318,7 @@ static void PopupMenuFromRect(CGRect rect)
                     inDirection:yPointsChanged < 0 ? UITextLayoutDirectionUp : UITextLayoutDirectionDown
                     offset:abs(yPointsChanged)];
             }
-            // over edge correnction.
+            // over edge correction.
             if (!position) {
                 position = xPointChanged < 0 ? webView.beginningOfDocument : webView.endOfDocument;
             }
