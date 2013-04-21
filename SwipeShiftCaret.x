@@ -40,18 +40,6 @@ static BOOL hasStarted = NO;
 - (NSString *)displayString;
 @end
 
-@interface UITextMagnifierCaret : UIView
-+ (id)sharedCaretMagnifier;
-- (void)zoomUpAnimation;
-- (void)zoomDownAnimation;
-- (void)stopMagnifying:(BOOL)arg1;
-- (void)setToMagnifierRenderer;
-- (void)setOffset:(CGPoint)arg1;
-- (void)setMagnificationPoint:(CGPoint)arg1;
-- (void)setText:(id)arg1;
-- (void)setTarget:(id)arg1;
-@end
-
 @interface UITextMagnifierRanged : UIView
 + (id)sharedRangedMagnifier;
 - (void)stopMagnifying:(BOOL)arg1;
@@ -150,7 +138,7 @@ static void InstallPanGestureRecognizer()
     }
 }
 
-static void ShiftCaret(BOOL isLeftSwipe)
+static void ShiftCaretToLeft(BOOL isLeftSwipe)
 {
     if ([tv respondsToSelector:@selector(positionFromPosition:inDirection:offset:)]) {
         UITextPosition *position = nil;
@@ -189,7 +177,7 @@ static void ShiftCaret(BOOL isLeftSwipe)
         [tv scrollSelectionToVisible:YES];
 }
 
-static void PopupMenu(CGRect rect)
+static void PopupMenuFromRect(CGRect rect)
 {
     UIMenuController *mc = [UIMenuController sharedMenuController];
     [mc setTargetRect:rect inView:tv];
@@ -251,13 +239,13 @@ static void PopupMenu(CGRect rect)
 %new(v@:@)
 - (void)leftSwipeShiftCaret:(UISwipeGestureRecognizer *)gesture
 {
-    ShiftCaret(YES);
+    ShiftCaretToLeft(YES);
 }
 
 %new(v@:@)
 - (void)rightSwipeShiftCaret:(UISwipeGestureRecognizer *)gesture
 {
-    ShiftCaret(NO);
+    ShiftCaretToLeft(NO);
 }
 
 // based code is SwipeSelection.
@@ -300,17 +288,17 @@ static void PopupMenu(CGRect rect)
         if ([tv respondsToSelector:@selector(selectedTextRange)]) {
             UITextRange *range = tv.selectedTextRange;
             if (range && !range.isEmpty)
-                PopupMenu([tv firstRectForRange:range]);
+                PopupMenuFromRect([tv firstRectForRange:range]);
         } else if ([tv respondsToSelector:@selector(rectForSelection:)]) {
             NSRange range = [tv selectedRange];
             // TODO: more better rect.
             if (range.length)
-                PopupMenu([tv rectForSelection:range]);
+                PopupMenuFromRect([tv rectForSelection:range]);
         } else if ([tv respondsToSelector:@selector(textRectForBounds:)]) {
             NSRange range = [tv selectionRange];
             // TODO: more better rect.
             if (range.length)
-                PopupMenu([tv textRectForBounds:tv.bounds]);
+                PopupMenuFromRect([tv textRectForBounds:tv.bounds]);
         }
 
     } else if (gesture.state == UIGestureRecognizerStateBegan) {
@@ -342,7 +330,7 @@ static void PopupMenu(CGRect rect)
             prevVelo = velo;
         }
         int scale = 16 / numberOfTouches ? : 1;
-        int pointsChanged = offset.x / scale;
+        int xPointChanged = offset.x / scale;
         int yPointsChanged = offset.y / scale;
 
         // for iOS 5+ and UIWebDocumentView 4+
@@ -351,12 +339,12 @@ static void PopupMenu(CGRect rect)
             if ([tv respondsToSelector:@selector(positionFromPosition:inDirection:offset:)]) {
                 if (startTextRange.isEmpty) {
                     position = [tv positionFromPosition:startTextRange.start
-                                            inDirection:pointsChanged < 0 ? UITextLayoutDirectionLeft : UITextLayoutDirectionRight
-                                                 offset:abs(pointsChanged)];
+                                            inDirection:xPointChanged < 0 ? UITextLayoutDirectionLeft : UITextLayoutDirectionRight
+                                                 offset:abs(xPointChanged)];
                 } else {
                     position = [tv positionFromPosition:isLeftPanning ? startTextRange.start : startTextRange.end
-                                            inDirection:pointsChanged < 0 ? UITextLayoutDirectionLeft : UITextLayoutDirectionRight
-                                                 offset:abs(pointsChanged)];
+                                            inDirection:xPointChanged < 0 ? UITextLayoutDirectionLeft : UITextLayoutDirectionRight
+                                                 offset:abs(xPointChanged)];
                 }
                 if (verticalScrollLockAnsMoveIsEnabled) {
                     position = [tv positionFromPosition:position
@@ -370,9 +358,9 @@ static void PopupMenu(CGRect rect)
 
             // ShiftCaret
             UITextRange *range;
-            if (!isSelectionMode)
+            if (!isSelectionMode) {
                 range = [tv textRangeFromPosition:position toPosition:position];
-            else {
+            } else {
                 if (startTextRange.isEmpty)
                     range = [tv textRangeFromPosition:startTextRange.start toPosition:position];
                 else
@@ -385,18 +373,18 @@ static void PopupMenu(CGRect rect)
         } else {
             // for iOS 4
             int location = startRange.location;
-            location += pointsChanged;
+            location += xPointChanged;
             int selectedLength = startRange.length;
 
             if (isSelectionMode) {
-                if (pointsChanged < 0) {
+                if (xPointChanged < 0) {
                     if (startRange.length == 0) {
-                        selectedLength += abs(pointsChanged);
+                        selectedLength += abs(xPointChanged);
                         if (location < 0)
                             selectedLength = startRange.location;
                     } else {
                         if (!isLeftPanning) {
-                            selectedLength -= abs(pointsChanged);
+                            selectedLength -= abs(xPointChanged);
                             if (selectedLength > 0) {
                                 location = startRange.location;
                             } else {
@@ -406,17 +394,17 @@ static void PopupMenu(CGRect rect)
                                     selectedLength = startRange.location;
                             }
                         } else {
-                            selectedLength += abs(pointsChanged);
+                            selectedLength += abs(xPointChanged);
                             if (selectedLength > startRange.location + startRange.length)
                                 selectedLength = startRange.location + startRange.length;
                         }
                     }
                 } else {
                     if (startRange.length == 0) {
-                        selectedLength += abs(pointsChanged);
+                        selectedLength += abs(xPointChanged);
                         location = startRange.location;
                     } else {
-                        selectedLength += abs(pointsChanged);
+                        selectedLength += abs(xPointChanged);
                         location = startRange.location;
                     }
                 }
