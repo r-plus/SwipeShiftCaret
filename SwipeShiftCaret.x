@@ -240,9 +240,9 @@ static void PopupMenuFromRect(CGRect rect)
         return;
 
     static BOOL isLeftPanning = YES;
-    static UITextRange *startTextRange;
+    static UITextRange *beginningTextRange;
     static int numberOfTouches = 0;
-    static CGPoint prevVelo;
+    static CGPoint previousVelocityPoint;
 
     int touchesCount = [gesture numberOfTouches];
     if (touchesCount > numberOfTouches)
@@ -255,12 +255,12 @@ static void PopupMenuFromRect(CGRect rect)
     if (gesture.state == UIGestureRecognizerStateEnded || gesture.state == UIGestureRecognizerStateCancelled) {
         // cleanup
         numberOfTouches = 0;
-        prevVelo = CGPointMake(0,0);
+        previousVelocityPoint = CGPointMake(0,0);
         isLeftPanning = YES;
         gesture.cancelsTouchesInView = NO;
-        if ([webView respondsToSelector:@selector(positionFromPosition:inDirection:offset:)])
-            [startTextRange release];
-        startTextRange = nil;
+        if (beginningTextRange)
+            [beginningTextRange release];
+        beginningTextRange = nil;
 
         // reveal for UITextView, UITextContentView and UIWebDocumentView.
         if ([tv respondsToSelector:@selector(scrollSelectionToVisible:)] && hasStarted)
@@ -277,7 +277,7 @@ static void PopupMenuFromRect(CGRect rect)
     } else if (gesture.state == UIGestureRecognizerStateBegan) {
 
         if ([webView respondsToSelector:@selector(positionFromPosition:inDirection:offset:)])
-            startTextRange = [webView.selectedTextRange retain];
+            beginningTextRange = [webView.selectedTextRange retain];
 
     } else if (gesture.state == UIGestureRecognizerStateChanged) {
 
@@ -294,9 +294,9 @@ static void PopupMenuFromRect(CGRect rect)
         hasStarted = YES;
         if (fasterByVelocityIsEnabled) {
             CGPoint velo = [gesture velocityInView:tv];
-            if (abs(prevVelo.x) < 1000 && abs(velo.x) / 1000 != 0)
+            if (abs(previousVelocityPoint.x) < 1000 && abs(velo.x) / 1000 != 0)
                 numberOfTouches += (abs(velo.x) / 1000);
-            prevVelo = velo;
+            previousVelocityPoint = velo;
         }
         int scale = 16 / numberOfTouches ? : 1;
         int xPointChanged = offset.x / scale;
@@ -304,12 +304,12 @@ static void PopupMenuFromRect(CGRect rect)
 
         if ([webView respondsToSelector:@selector(positionFromPosition:inDirection:offset:)]) {
             UITextPosition *position = nil;
-            if (startTextRange.isEmpty) {
-                position = [webView positionFromPosition:startTextRange.start
+            if (beginningTextRange.isEmpty) {
+                position = [webView positionFromPosition:beginningTextRange.start
                     inDirection:xPointChanged < 0 ? UITextLayoutDirectionLeft : UITextLayoutDirectionRight
                     offset:abs(xPointChanged)];
             } else {
-                position = [webView positionFromPosition:isLeftPanning ? startTextRange.start : startTextRange.end
+                position = [webView positionFromPosition:isLeftPanning ? beginningTextRange.start : beginningTextRange.end
                     inDirection:xPointChanged < 0 ? UITextLayoutDirectionLeft : UITextLayoutDirectionRight
                     offset:abs(xPointChanged)];
             }
@@ -327,10 +327,10 @@ static void PopupMenuFromRect(CGRect rect)
             if (!isSelectionMode) {
                 range = [webView textRangeFromPosition:position toPosition:position];
             } else {
-                if (startTextRange.isEmpty)
-                    range = [webView textRangeFromPosition:startTextRange.start toPosition:position];
+                if (beginningTextRange.isEmpty)
+                    range = [webView textRangeFromPosition:beginningTextRange.start toPosition:position];
                 else
-                    range = [webView textRangeFromPosition:isLeftPanning ? startTextRange.end : startTextRange.start toPosition:position];
+                    range = [webView textRangeFromPosition:isLeftPanning ? beginningTextRange.end : beginningTextRange.start toPosition:position];
             }
             webView.selectedTextRange = range;
             // reveal for UITextField.
