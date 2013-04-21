@@ -94,13 +94,6 @@
                 <string>Vertical Move</string>
                 <key>PostNotification</key>
                 <string>jp.r-plus.swipeshiftcaret.settingschanged</string>
-                <key>pl_filter</key>
-                <dict>
-                    <key>CoreFoundationVersion</key>
-                    <array>
-                        <string>675.00</string>
-                    </array>
-                </dict>
             </dict>
             <dict>
                 <key>cell</key>

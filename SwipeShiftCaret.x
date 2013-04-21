@@ -6,6 +6,7 @@
 #define PREF_PATH @"/var/mobile/Library/Preferences/jp.r-plus.SwipeShiftCaret.plist"
 
 static UIView *tv;
+static UIWebDocumentView *webView;
 static BOOL panGestureEnabled;
 static BOOL fasterByVelocityIsEnabled;
 static BOOL verticalScrollLockIsEnabled;
@@ -13,7 +14,11 @@ static BOOL verticalScrollLockAnsMoveIsEnabled;
 static BOOL isSelectionMode = NO;
 static BOOL hasStarted = NO;
 
+@interface UIWebDocumentView : UIView <UITextInput>
+@end
+
 @interface UIView (Private) <UITextInput>
+- (UIWebDocumentView *)webView;
 - (NSRange)selectedRange;
 - (NSRange)selectionRange;
 - (void)setSelectedRange:(NSRange)range;
@@ -131,34 +136,15 @@ static void InstallPanGestureRecognizer()
 
 static void ShiftCaretToLeft(BOOL isLeftSwipe)
 {
-    if ([tv respondsToSelector:@selector(positionFromPosition:inDirection:offset:)]) {
+    if ([webView respondsToSelector:@selector(positionFromPosition:inDirection:offset:)]) {
         UITextPosition *position = nil;
-        position = isLeftSwipe ? [tv positionFromPosition:tv.selectedTextRange.start inDirection:UITextLayoutDirectionLeft offset:1]
-            : [tv positionFromPosition:tv.selectedTextRange.end inDirection:UITextLayoutDirectionRight offset:1];
+        position = isLeftSwipe ? [webView positionFromPosition:webView.selectedTextRange.start inDirection:UITextLayoutDirectionLeft offset:1]
+            : [webView positionFromPosition:webView.selectedTextRange.end inDirection:UITextLayoutDirectionRight offset:1];
         // failsafe for over edge position crash.
         if (!position)
             return;
-        UITextRange *range = [tv textRangeFromPosition:position toPosition:position];
-        tv.selectedTextRange = range;
-    } else {
-        // for iOS 4
-        NSRange currentRange;
-        if ([tv respondsToSelector:@selector(selectionRange)])
-            currentRange = [tv selectionRange];
-        else if ([tv respondsToSelector:@selector(selectedRange)])
-            currentRange = [tv selectedRange];
-
-        NSInteger location = isLeftSwipe ? --currentRange.location : ++currentRange.location;
-        if (location < 0)
-            location = 0;
-        else if (location > tv.text.length)
-            location = tv.text.length;
-
-        NSRange range = NSMakeRange(location, 0);
-        if ([tv respondsToSelector:@selector(setSelectedRange:)])
-            [tv setSelectedRange:range];
-        else if ([tv respondsToSelector:@selector(setSelectionRange:)])
-            [tv setSelectionRange:range];
+        UITextRange *range = [webView textRangeFromPosition:position toPosition:position];
+        webView.selectedTextRange = range;
     }
 
     // reveal for UITextField.
@@ -211,7 +197,12 @@ static void PopupMenuFromRect(CGRect rect)
     if (tmp && ([self respondsToSelector:@selector(setSelectedTextRange:)] ||
                 [self respondsToSelector:@selector(setSelectedRange:)] ||
                 [self respondsToSelector:@selector(setSelectionRange:)])) {
-        tv = self;
+        if ([self isKindOfClass:%c(UIWebDocumentView)]) {
+            tv = webView = (UIWebDocumentView *)self;
+        } else {
+            tv = self;
+            webView = [tv webView];
+        }
         if (panGestureEnabled)
             InstallPanGestureRecognizer();
         else
@@ -222,8 +213,10 @@ static void PopupMenuFromRect(CGRect rect)
 
 - (BOOL)resignFirstResponder
 {
-    if (tv == self)
+    if (tv == self) {
         tv = nil;
+        webView = nil;
+    }
     return %orig;
 }
 
@@ -248,7 +241,6 @@ static void PopupMenuFromRect(CGRect rect)
 
     static BOOL isLeftPanning = YES;
     static UITextRange *startTextRange;
-    static NSRange startRange;
     static int numberOfTouches = 0;
     static CGPoint prevVelo;
 
@@ -266,7 +258,7 @@ static void PopupMenuFromRect(CGRect rect)
         prevVelo = CGPointMake(0,0);
         isLeftPanning = YES;
         gesture.cancelsTouchesInView = NO;
-        if ([tv respondsToSelector:@selector(positionFromPosition:inDirection:offset:)])
+        if ([webView respondsToSelector:@selector(positionFromPosition:inDirection:offset:)])
             [startTextRange release];
         startTextRange = nil;
 
@@ -276,30 +268,16 @@ static void PopupMenuFromRect(CGRect rect)
         hasStarted = NO;
 
         // auto pop-up menu.
-        if ([tv respondsToSelector:@selector(selectedTextRange)]) {
-            UITextRange *range = tv.selectedTextRange;
+        if ([webView respondsToSelector:@selector(selectedTextRange)]) {
+            UITextRange *range = webView.selectedTextRange;
             if (range && !range.isEmpty)
-                PopupMenuFromRect([tv firstRectForRange:range]);
-        } else if ([tv respondsToSelector:@selector(rectForSelection:)]) {
-            NSRange range = [tv selectedRange];
-            // TODO: more better rect.
-            if (range.length)
-                PopupMenuFromRect([tv rectForSelection:range]);
-        } else if ([tv respondsToSelector:@selector(textRectForBounds:)]) {
-            NSRange range = [tv selectionRange];
-            // TODO: more better rect.
-            if (range.length)
-                PopupMenuFromRect([tv textRectForBounds:tv.bounds]);
+                PopupMenuFromRect([webView firstRectForRange:range]);
         }
 
     } else if (gesture.state == UIGestureRecognizerStateBegan) {
 
-        if ([tv respondsToSelector:@selector(positionFromPosition:inDirection:offset:)])
-            startTextRange = [tv.selectedTextRange retain];
-        else if ([tv respondsToSelector:@selector(selectedRange)])
-            startRange = [tv selectedRange];
-        else if ([tv respondsToSelector:@selector(selectionRange)])
-            startRange = [tv selectionRange];
+        if ([webView respondsToSelector:@selector(positionFromPosition:inDirection:offset:)])
+            startTextRange = [webView.selectedTextRange retain];
 
     } else if (gesture.state == UIGestureRecognizerStateChanged) {
 
@@ -324,24 +302,21 @@ static void PopupMenuFromRect(CGRect rect)
         int xPointChanged = offset.x / scale;
         int yPointsChanged = offset.y / scale;
 
-        // for iOS 5+ and UIWebDocumentView 4+
-        if ([tv respondsToSelector:@selector(positionFromPosition:inDirection:offset:)]) {
+        if ([webView respondsToSelector:@selector(positionFromPosition:inDirection:offset:)]) {
             UITextPosition *position = nil;
-            if ([tv respondsToSelector:@selector(positionFromPosition:inDirection:offset:)]) {
-                if (startTextRange.isEmpty) {
-                    position = [tv positionFromPosition:startTextRange.start
-                                            inDirection:xPointChanged < 0 ? UITextLayoutDirectionLeft : UITextLayoutDirectionRight
-                                                 offset:abs(xPointChanged)];
-                } else {
-                    position = [tv positionFromPosition:isLeftPanning ? startTextRange.start : startTextRange.end
-                                            inDirection:xPointChanged < 0 ? UITextLayoutDirectionLeft : UITextLayoutDirectionRight
-                                                 offset:abs(xPointChanged)];
-                }
-                if (verticalScrollLockAnsMoveIsEnabled) {
-                    position = [tv positionFromPosition:position
-                                            inDirection:yPointsChanged < 0 ? UITextLayoutDirectionUp : UITextLayoutDirectionDown
-                                                 offset:abs(yPointsChanged)];
-                }
+            if (startTextRange.isEmpty) {
+                position = [webView positionFromPosition:startTextRange.start
+                    inDirection:xPointChanged < 0 ? UITextLayoutDirectionLeft : UITextLayoutDirectionRight
+                    offset:abs(xPointChanged)];
+            } else {
+                position = [webView positionFromPosition:isLeftPanning ? startTextRange.start : startTextRange.end
+                    inDirection:xPointChanged < 0 ? UITextLayoutDirectionLeft : UITextLayoutDirectionRight
+                    offset:abs(xPointChanged)];
+            }
+            if (verticalScrollLockAnsMoveIsEnabled) {
+                position = [webView positionFromPosition:position
+                    inDirection:yPointsChanged < 0 ? UITextLayoutDirectionUp : UITextLayoutDirectionDown
+                    offset:abs(yPointsChanged)];
             }
             // failsafe for over edge position crash.
             if (!position)
@@ -350,77 +325,16 @@ static void PopupMenuFromRect(CGRect rect)
             // ShiftCaret
             UITextRange *range;
             if (!isSelectionMode) {
-                range = [tv textRangeFromPosition:position toPosition:position];
+                range = [webView textRangeFromPosition:position toPosition:position];
             } else {
                 if (startTextRange.isEmpty)
-                    range = [tv textRangeFromPosition:startTextRange.start toPosition:position];
+                    range = [webView textRangeFromPosition:startTextRange.start toPosition:position];
                 else
-                    range = [tv textRangeFromPosition:isLeftPanning ? startTextRange.end : startTextRange.start toPosition:position];
+                    range = [webView textRangeFromPosition:isLeftPanning ? startTextRange.end : startTextRange.start toPosition:position];
             }
-            tv.selectedTextRange = range;
+            webView.selectedTextRange = range;
             // reveal for UITextField.
             [[%c(UIFieldEditor) sharedFieldEditor] revealSelection];
-
-        } else {
-            // for iOS 4
-            int location = startRange.location;
-            location += xPointChanged;
-            int selectedLength = startRange.length;
-
-            if (isSelectionMode) {
-                if (xPointChanged < 0) {
-                    if (startRange.length == 0) {
-                        selectedLength += abs(xPointChanged);
-                        if (location < 0)
-                            selectedLength = startRange.location;
-                    } else {
-                        if (!isLeftPanning) {
-                            selectedLength -= abs(xPointChanged);
-                            if (selectedLength > 0) {
-                                location = startRange.location;
-                            } else {
-                                location += startRange.length; 
-                                selectedLength = startRange.location - location;
-                                if (selectedLength > startRange.location)
-                                    selectedLength = startRange.location;
-                            }
-                        } else {
-                            selectedLength += abs(xPointChanged);
-                            if (selectedLength > startRange.location + startRange.length)
-                                selectedLength = startRange.location + startRange.length;
-                        }
-                    }
-                } else {
-                    if (startRange.length == 0) {
-                        selectedLength += abs(xPointChanged);
-                        location = startRange.location;
-                    } else {
-                        selectedLength += abs(xPointChanged);
-                        location = startRange.location;
-                    }
-                }
-            } else
-                selectedLength = 0;
-
-            if (location < 0)
-                location = 0;
-            else if (location > tv.text.length)
-                location = tv.text.length;
-
-            if (selectedLength + location > tv.text.length)
-                selectedLength = tv.text.length - location;
-            else if (selectedLength > tv.text.length)
-                selectedLength = tv.text.length;
-
-            NSRange range = NSMakeRange(location,selectedLength);
-
-            if ([tv respondsToSelector:@selector(setSelectedRange:)]) {
-                // UITextView and UITextContentView
-                [tv setSelectedRange:range];
-            } else if ([tv respondsToSelector:@selector(setSelectionRange:)]) {
-                // UITextField
-                [tv setSelectionRange:range];
-            }
         }
     }
 }
