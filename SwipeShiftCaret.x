@@ -15,6 +15,7 @@ static BOOL isSelectionMode = NO;
 static BOOL hasStarted = NO;
 
 @interface UIWebDocumentView : UIView <UITextInput>
+- (BOOL)isEditing;
 @end
 
 @interface UIView (Private) <UITextInput>
@@ -33,6 +34,7 @@ static BOOL hasStarted = NO;
 @interface UIKeyboardImpl : NSObject
 + (id)sharedInstance;
 - (BOOL)callLayoutIsShiftKeyBeingHeld;
+- (BOOL)caretVisible;
 @end
 
 @interface UIFieldEditor : NSObject
@@ -249,6 +251,11 @@ static void PopupMenuFromRect(CGRect rect)
         numberOfTouches = touchesCount;
 
     UIKeyboardImpl *keyboardImpl = [%c(UIKeyboardImpl) sharedInstance];
+    // fix for un-editable UIWebDocumentView.
+    // NOTE: -(BOOL)isEditing method of UIWebDocumentView always return NO, it's not useful.
+    if (![keyboardImpl caretVisible])
+        return;
+
     if ([keyboardImpl respondsToSelector:@selector(callLayoutIsShiftKeyBeingHeld)] && !isSelectionMode)
         isSelectionMode = [keyboardImpl callLayoutIsShiftKeyBeingHeld];
 
