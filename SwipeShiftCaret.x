@@ -13,6 +13,7 @@ static BOOL verticalScrollLockIsEnabled;
 static BOOL verticalScrollLockAnsMoveIsEnabled;
 static BOOL isSelectionMode = NO;
 static BOOL hasStarted = NO;
+static BOOL isMoveWithScrollMode = NO;
 
 @interface UIWebDocumentView : UIView <UITextInput>
 - (BOOL)isEditing;
@@ -53,12 +54,14 @@ static BOOL hasStarted = NO;
 @implementation SCSwipeGestureRecognizer
 - (BOOL)canBePreventedByGestureRecognizer:(UIGestureRecognizer *)gesture
 {
+    if ([gesture isMemberOfClass:[SCSwipeGestureRecognizer class]])
+        return YES;
+    if (isMoveWithScrollMode)
+        return NO;
     if ([gesture isKindOfClass:[UIPanGestureRecognizer class]] &&
             ![gesture.view isKindOfClass:%c(CKMessageEntryView)] &&
             ![[[NSBundle mainBundle] bundleIdentifier] isEqualToString:@"com.google.Gmail"])
         self.state = UIGestureRecognizerStateFailed;
-    if ([gesture isMemberOfClass:[SCSwipeGestureRecognizer class]])
-        return YES;
     return NO;
 }
 
@@ -80,12 +83,14 @@ static BOOL hasStarted = NO;
 @implementation SCPanGestureRecognizer
 - (BOOL)canBePreventedByGestureRecognizer:(UIGestureRecognizer *)gesture
 {
+    if ([gesture isMemberOfClass:[SCPanGestureRecognizer class]])
+        return YES;
+    if (isMoveWithScrollMode)
+        return NO;
     if ([gesture isKindOfClass:[UIPanGestureRecognizer class]] &&
             ![gesture.view isKindOfClass:%c(CKMessageEntryView)] &&
             ![[[NSBundle mainBundle] bundleIdentifier] isEqualToString:@"com.google.Gmail"])
         self.state = UIGestureRecognizerStateCancelled;
-    if ([gesture isMemberOfClass:[SCPanGestureRecognizer class]])
-        return YES;
     return NO;
 }
 
@@ -361,6 +366,8 @@ static void LoadSettings()
     verticalScrollLockIsEnabled = verticalScrollLockPref ? [verticalScrollLockPref boolValue] : NO;
     id verticalScrollLockAndMovePref = [dict objectForKey:@"VLockAndMoveEnabled"];
     verticalScrollLockAnsMoveIsEnabled = verticalScrollLockAndMovePref ? [verticalScrollLockAndMovePref boolValue] : NO;
+    id moveWithScrollModePref = [dict objectForKey:@"MoveWithScrollModeEnabled"];
+    isMoveWithScrollMode = moveWithScrollModePref ? [moveWithScrollModePref boolValue] : NO;
     if (tv) {
         if (panGestureEnabled)
             InstallPanGestureRecognizer();
