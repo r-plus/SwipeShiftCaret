@@ -5,6 +5,10 @@
 
 #define PREF_PATH @"/var/mobile/Library/Preferences/jp.r-plus.SwipeShiftCaret.plist"
 
+@interface UIWebDocumentView : UIView <UITextInput>
+- (BOOL)isEditing;
+@end
+
 static UIView *tv;
 static UIWebDocumentView *webView;
 static BOOL panGestureEnabled;
@@ -14,10 +18,6 @@ static BOOL verticalScrollLockAnsMoveIsEnabled;
 static BOOL isSelectionMode = NO;
 static BOOL hasStarted = NO;
 static BOOL isMoveWithScrollMode = NO;
-
-@interface UIWebDocumentView : UIView <UITextInput>
-- (BOOL)isEditing;
-@end
 
 @interface UIView (Private) <UITextInput>
 - (UIWebDocumentView *)webView;
