@@ -1,0 +1,9 @@
+language: objective-c
+
+before_install:
+  - brew update
+  - brew install dpkg
+  - curl https://raw.github.com/r-plus/dotfiles/master/install_theos.sh | bash
+
+script:
+  - make
