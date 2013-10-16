@@ -6,4 +6,5 @@ before_install:
   - curl https://raw.github.com/r-plus/dotfiles/master/install_theos.sh | bash
 
 script:
+  - make clean
   - make
