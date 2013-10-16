@@ -1,4 +1,5 @@
-###SwipeShiftCaret
+###SwipeShiftCaret [![build](https://travis-ci.org/r-plus/SwipeShiftCaret.png?branch=master)](https://travis-ci.org/r-plus/SwipeShiftCaret)
+
 Caret micromanager shift the caret 1 char or continual via swipe.
 
 ![](http://dl.dropbox.com/u/149268/swipeshiftcaret_a_GIFSoup.com.gif)
