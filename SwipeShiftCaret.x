@@ -1,3 +1,4 @@
+#import <Firmware.h>
 #import <UIKit/UIKit.h>
 #import <UIKit/UIGestureRecognizerSubclass.h>
 
@@ -209,7 +210,11 @@ static void PopupMenuFromRect(CGRect rect)
         } else if ([self respondsToSelector:@selector(webView)]) {
             tv = self;
             webView = [tv webView];
+            // Workaround for iOS 7: webView method didn't return object.
+            if (kCFCoreFoundationVersionNumber >= kCFCoreFoundationVersionNumber_iOS_7_0 && !webView)
+                webView = (UIWebDocumentView *)tv;
         }
+        CMLog(@"tv = %@, webView = %@", tv, webView);
         if (panGestureEnabled)
             InstallPanGestureRecognizer();
         else
