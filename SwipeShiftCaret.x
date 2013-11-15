@@ -17,6 +17,7 @@ static BOOL verticalScrollLockAnsMoveIsEnabled;
 static BOOL isSelectionMode = NO;
 static BOOL hasStarted = NO;
 static BOOL isMoveWithScrollMode = NO;
+static BOOL isPreventSwipeLoupe;
 
 @interface UIView (Private) <UITextInput>
 - (UIWebDocumentView *)webView;
@@ -64,6 +65,7 @@ static BOOL isMoveWithScrollMode = NO;
     return NO;
 }
 
+// NOTE: This method didnot call for UISwipeGestureRecognizer if UIDragRecognizer is dragable since iOS 7+.
 - (BOOL)canPreventGestureRecognizer:(UIGestureRecognizer *)gesture
 {
     // Prevent duplicated myself
@@ -95,6 +97,7 @@ static BOOL isMoveWithScrollMode = NO;
 
 - (BOOL)canPreventGestureRecognizer:(UIGestureRecognizer *)gesture
 {
+    CMLog(@"%@", gesture);
     // Prevent duplicated myself
     if ([gesture isMemberOfClass:[SCPanGestureRecognizer class]])
         return YES;
@@ -105,6 +108,10 @@ static BOOL isMoveWithScrollMode = NO;
     if (hasStarted && [gesture isKindOfClass:[UIPanGestureRecognizer class]])
         if (verticalScrollLockIsEnabled || verticalScrollLockAnsMoveIsEnabled)
             return YES;
+    // UIDragRecognizer action @selector(loupeGesture:) since iOS 7+
+    // But caret shift performance is too bad even if prevent this gestureRecognizer.
+/*    if (isPreventSwipeLoupe && [gesture isKindOfClass:%c(UIDragRecognizer)])*/
+/*        return YES;*/
     return NO;
 }
 @end
@@ -196,6 +203,15 @@ static void PopupMenuFromRect(CGRect rect)
 }
 %end
 
+%group iOS_ge_70
+%hook UIDragRecognizer
+- (BOOL)canBeginDrag
+{
+    return isPreventSwipeLoupe ? NO : %orig;
+}
+%end
+%end
+
 %hook UIView
 - (BOOL)becomeFirstResponder
 {
@@ -212,11 +228,13 @@ static void PopupMenuFromRect(CGRect rect)
             if (kCFCoreFoundationVersionNumber >= kCFCoreFoundationVersionNumber_iOS_7_0 && !webView)
                 webView = (UIWebDocumentView *)tv;
         }
+        CMLog(@"firstResponder class = %@", NSStringFromClass([self class]));
         CMLog(@"tv = %@, webView = %@", tv, webView);
         if (panGestureEnabled)
             InstallPanGestureRecognizer();
         else
             InstallSwipeGestureRecognizer();
+        CMLog(@"gestureRecognizers = %@", [self gestureRecognizers]);
     }
     return tmp;
 }
@@ -371,6 +389,8 @@ static void LoadSettings()
     verticalScrollLockAnsMoveIsEnabled = verticalScrollLockAndMovePref ? [verticalScrollLockAndMovePref boolValue] : NO;
     id moveWithScrollModePref = [dict objectForKey:@"MoveWithScrollModeEnabled"];
     isMoveWithScrollMode = moveWithScrollModePref ? [moveWithScrollModePref boolValue] : NO;
+    id preventSwipeLoupePref = [dict objectForKey:@"PreventSwipeLoupe"];
+    isPreventSwipeLoupe = preventSwipeLoupePref ? [preventSwipeLoupePref boolValue] : NO;
     if (tv) {
         if (panGestureEnabled)
             InstallPanGestureRecognizer();
@@ -389,5 +409,8 @@ static void PostNotification(CFNotificationCenterRef center, void *observer, CFS
     @autoreleasepool {
         CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(), NULL, PostNotification, CFSTR("jp.r-plus.swipeshiftcaret.settingschanged"), NULL, CFNotificationSuspensionBehaviorCoalesce);
         LoadSettings();
+        %init;
+        if (kCFCoreFoundationVersionNumber >= kCFCoreFoundationVersionNumber_iOS_7_0)
+            %init(iOS_ge_70);
     }
 }
