@@ -2,8 +2,6 @@
 #import <UIKit/UIKit.h>
 #import <UIKit/UIGestureRecognizerSubclass.h>
 
-%config(generator=internal);
-
 #define PREF_PATH @"/var/mobile/Library/Preferences/jp.r-plus.SwipeShiftCaret.plist"
 
 @interface UIWebDocumentView : UIView <UITextInput>
