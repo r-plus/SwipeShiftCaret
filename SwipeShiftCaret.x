@@ -4,10 +4,7 @@
 
 #define PREF_PATH @"/var/mobile/Library/Preferences/jp.r-plus.SwipeShiftCaret.plist"
 
-@interface UIWebDocumentView : UIView <UITextInput>
-- (BOOL)isEditing;
-@end
-
+// global variables {{{
 static UIView *tv;
 static UIWebDocumentView *webView;
 static BOOL panGestureEnabled;
@@ -18,6 +15,12 @@ static BOOL isSelectionMode = NO;
 static BOOL hasStarted = NO;
 static BOOL isMoveWithScrollMode = NO;
 static BOOL isPreventSwipeLoupe;
+// }}}
+
+// interfaces {{{
+@interface UIWebDocumentView : UIView <UITextInput>
+- (BOOL)isEditing;
+@end
 
 @interface UIView (Private) <UITextInput>
 - (UIWebDocumentView *)webView;
@@ -47,7 +50,9 @@ static BOOL isPreventSwipeLoupe;
 - (UIKBKey *)keyHitTest:(CGPoint)arg;
 - (NSString *)displayString;
 @end
+// }}}
 
+// GestureRecognizers {{{
 @interface SCSwipeGestureRecognizer : UISwipeGestureRecognizer
 @end
 
@@ -116,6 +121,9 @@ static BOOL isPreventSwipeLoupe;
 }
 @end
 
+// }}}
+
+// functions {{{
 static void InstallSwipeGestureRecognizer()
 {
     // if this uninstall pan gesture is nothing, should implement 'if (panGestureEnabled) return;' code
@@ -173,7 +181,9 @@ static void PopupMenuFromRect(CGRect rect)
     [mc setTargetRect:rect inView:tv];
     [mc setMenuVisible:YES animated:YES];
 }
+// }}}
 
+// Hooks {{{
 %hook UIKeyboardLayoutStar
 - (void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event
 {
@@ -248,20 +258,20 @@ static void PopupMenuFromRect(CGRect rect)
     return %orig;
 }
 
-%new(v@:@)
+%new
 - (void)leftSwipeShiftCaret:(UISwipeGestureRecognizer *)gesture
 {
     ShiftCaretToLeft(YES);
 }
 
-%new(v@:@)
+%new
 - (void)rightSwipeShiftCaret:(UISwipeGestureRecognizer *)gesture
 {
     ShiftCaretToLeft(NO);
 }
 
 // based code is SwipeSelection.
-%new(v@:@)
+%new
 - (void)SCPanGestureDidPan:(UIPanGestureRecognizer *)gesture
 {
     if (!panGestureEnabled)
@@ -375,6 +385,7 @@ static void PopupMenuFromRect(CGRect rect)
     }
 }
 %end
+// }}}
 
 static void LoadSettings()
 {	
@@ -414,3 +425,5 @@ static void PostNotification(CFNotificationCenterRef center, void *observer, CFS
             %init(iOS_ge_70);
     }
 }
+
+/* vim: set fdm=marker : */
