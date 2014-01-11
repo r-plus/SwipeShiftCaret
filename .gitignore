@@ -1,0 +1,9 @@
+.theos
+_
+obj
+*.deb
+Application Support/
+KOKeyboard
+asset
+*xcf
+theos
