@@ -390,7 +390,7 @@ static void LoadSettings()
     id moveWithScrollModePref = [dict objectForKey:@"MoveWithScrollModeEnabled"];
     isMoveWithScrollMode = moveWithScrollModePref ? [moveWithScrollModePref boolValue] : NO;
     id preventSwipeLoupePref = [dict objectForKey:@"PreventSwipeLoupe"];
-    isPreventSwipeLoupe = preventSwipeLoupePref ? [preventSwipeLoupePref boolValue] : NO;
+    isPreventSwipeLoupe = preventSwipeLoupePref ? [preventSwipeLoupePref boolValue] : YES;
     if (tv) {
         if (panGestureEnabled)
             InstallPanGestureRecognizer();

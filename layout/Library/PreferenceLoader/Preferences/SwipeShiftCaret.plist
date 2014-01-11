@@ -71,7 +71,7 @@
                 <key>cell</key>
                 <string>PSSwitchCell</string>
                 <key>default</key>
-                <false/>
+                <true/>
                 <key>defaults</key>
                 <string>jp.r-plus.SwipeShiftCaret</string>
                 <key>key</key>
