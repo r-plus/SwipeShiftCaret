@@ -4,19 +4,6 @@
 
 #define PREF_PATH @"/var/mobile/Library/Preferences/jp.r-plus.SwipeShiftCaret.plist"
 
-// global variables {{{
-static UIView *tv;
-static UIWebDocumentView *webView;
-static BOOL panGestureEnabled;
-static BOOL fasterByVelocityIsEnabled;
-static BOOL verticalScrollLockIsEnabled;
-static BOOL verticalScrollLockAnsMoveIsEnabled;
-static BOOL isSelectionMode = NO;
-static BOOL hasStarted = NO;
-static BOOL isMoveWithScrollMode = NO;
-static BOOL isPreventSwipeLoupe;
-// }}}
-
 // interfaces {{{
 @interface UIWebDocumentView : UIView <UITextInput>
 - (BOOL)isEditing;
@@ -50,6 +37,19 @@ static BOOL isPreventSwipeLoupe;
 - (UIKBKey *)keyHitTest:(CGPoint)arg;
 - (NSString *)displayString;
 @end
+// }}}
+
+// global variables {{{
+static UIView *tv;
+static UIWebDocumentView *webView;
+static BOOL panGestureEnabled;
+static BOOL fasterByVelocityIsEnabled;
+static BOOL verticalScrollLockIsEnabled;
+static BOOL verticalScrollLockAnsMoveIsEnabled;
+static BOOL isSelectionMode = NO;
+static BOOL hasStarted = NO;
+static BOOL isMoveWithScrollMode = NO;
+static BOOL isPreventSwipeLoupe;
 // }}}
 
 // GestureRecognizers {{{
