@@ -4,8 +4,6 @@ before_install:
   - brew update
   - brew install dpkg
   - curl https://raw.github.com/r-plus/dotfiles/master/install_theos.sh | bash
-  - echo $(pwd)
-  - echo $(ls)
 
 script:
   - make clean
