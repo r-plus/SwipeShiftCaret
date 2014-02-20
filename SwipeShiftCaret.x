@@ -231,12 +231,13 @@ static void PopupMenuFromRect(CGRect rect)
                 [self respondsToSelector:@selector(setSelectionRange:)])) {
         if ([self isKindOfClass:%c(UIWebDocumentView)]) {
             tv = webView = (UIWebDocumentView *)self;
-        } else if ([self respondsToSelector:@selector(webView)]) {
+        } else {
             tv = self;
-            webView = [tv webView];
-            // Workaround for iOS 7: webView method didn't return object.
-            if (kCFCoreFoundationVersionNumber >= kCFCoreFoundationVersionNumber_iOS_7_0 && !webView)
+            // iOS 7: webView method no longer supported, its returning nil.
+            if (kCFCoreFoundationVersionNumber >= kCFCoreFoundationVersionNumber_iOS_7_0)
                 webView = (UIWebDocumentView *)tv;
+            else if ([self respondsToSelector:@selector(webView)])
+                webView = [tv webView];
         }
         CMLog(@"firstResponder class = %@", NSStringFromClass([self class]));
         CMLog(@"tv = %@, webView = %@", tv, webView);
