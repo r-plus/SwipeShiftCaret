@@ -7,6 +7,8 @@
 // interfaces {{{
 @interface UIWebDocumentView : UIView <UITextInput>
 - (BOOL)isEditing;
+- (void)beginSelectionChange;
+- (void)endSelectionChange;
 @end
 
 @interface UIView (Private) <UITextInput>
@@ -22,7 +24,8 @@
 @property(copy) NSString *text;
 @end
 
-@protocol UITextInputPrivate <UITextInput, UITextInputTokenizer> @end
+@protocol UITextInputPrivate <UITextInput, UITextInputTokenizer>
+@end
 
 @interface UIKeyboardImpl : NSObject
 + (id)sharedInstance;
@@ -296,16 +299,6 @@ static void PopupMenuFromRect(CGRect rect)
     // NOTE: -(BOOL)isEditing method of UIWebDocumentView always return NO, it's not useful.
     if (![keyboardImpl caretVisible])
         return;
-    
-    // from SwipeSelection
-    // Get the text input
-    id <UITextInputPrivate> privateInputDelegate = nil;
-    if ([keyboardImpl respondsToSelector:@selector(privateInputDelegate)]) {
-        privateInputDelegate = (id)keyboardImpl.privateInputDelegate;
-    }
-    if (!privateInputDelegate && [keyboardImpl respondsToSelector:@selector(inputDelegate)]) {
-        privateInputDelegate = (id)keyboardImpl.inputDelegate;
-    }
 
     if ([keyboardImpl respondsToSelector:@selector(callLayoutIsShiftKeyBeingHeld)] && !isSelectionMode)
         isSelectionMode = [keyboardImpl callLayoutIsShiftKeyBeingHeld];
@@ -333,8 +326,8 @@ static void PopupMenuFromRect(CGRect rect)
         }
         
         // fix text deletion issue during Korean syllable composing
-        if ([privateInputDelegate respondsToSelector:@selector(endSelectionChange)])
-            [privateInputDelegate performSelector:@selector(endSelectionChange)];
+        if ([webView respondsToSelector:@selector(endSelectionChange)])
+            [webView endSelectionChange];
 
     } else if (gesture.state == UIGestureRecognizerStateBegan) {
 
@@ -342,8 +335,8 @@ static void PopupMenuFromRect(CGRect rect)
             beginningTextRange = [webView.selectedTextRange retain];
         
         // fix text deletion issue during Korean syllable composing
-        if ([privateInputDelegate respondsToSelector:@selector(beginSelectionChange)])
-            [privateInputDelegate performSelector:@selector(beginSelectionChange)];
+        if ([webView respondsToSelector:@selector(beginSelectionChange)])
+            [webView beginSelectionChange];
 
     } else if (gesture.state == UIGestureRecognizerStateChanged) {
 
@@ -411,7 +404,7 @@ static void PopupMenuFromRect(CGRect rect)
 // }}}
 
 static void LoadSettings()
-{	
+{
     NSDictionary *dict = [NSDictionary dictionaryWithContentsOfFile:PREF_PATH];
     id panGesturePref = [dict objectForKey:@"PanGestureEnabled"];
     panGestureEnabled = panGesturePref ? [panGesturePref boolValue] : YES;
