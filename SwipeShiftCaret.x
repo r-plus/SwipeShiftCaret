@@ -172,7 +172,11 @@ static void ShiftCaretToLeft(BOOL isLeftSwipe)
         if (!position)
             return;
         UITextRange *range = [webView textRangeFromPosition:position toPosition:position];
+        if ([webView respondsToSelector:@selector(beginSelectionChange)])
+            [webView beginSelectionChange];
         webView.selectedTextRange = range;
+        if ([webView respondsToSelector:@selector(endSelectionChange)])
+            [webView endSelectionChange];
     }
 
     // reveal for UITextField.
