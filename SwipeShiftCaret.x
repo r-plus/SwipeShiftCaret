@@ -33,6 +33,12 @@
 - (BOOL)caretVisible;
 @property (readonly, assign, nonatomic) UIResponder <UITextInputPrivate> *privateInputDelegate;
 @property (readonly, assign, nonatomic) UIResponder <UITextInput> *inputDelegate;
+- (void)setMarkedText:(id)arg1 selectedRange:(NSRange)arg2 inputString:(id)arg3 searchString:(id)arg4;
+- (id)searchStringForMarkedText;
+- (id)markedText;
+- (BOOL)hasEditableMarkedText;
+- (BOOL)hasMarkedText;
+- (void)generateCandidates;
 @end
 
 @interface UIFieldEditor : NSObject
@@ -175,6 +181,19 @@ static void ShiftCaretToLeft(BOOL isLeftSwipe)
         if ([webView respondsToSelector:@selector(beginSelectionChange)])
             [webView beginSelectionChange];
         webView.selectedTextRange = range;
+        // update Candidate strings
+        // iOS 7 only
+        UIKeyboardImpl *keyboardImpl = [%c(UIKeyboardImpl) sharedInstance];
+        if ([keyboardImpl respondsToSelector:@selector(setMarkedText:selectedRange:inputString:searchString:)]) {
+            if ([keyboardImpl hasEditableMarkedText]) {
+                UITextPosition *beginning = webView.beginningOfDocument;
+                NSUInteger rangeStartPosition = [webView offsetFromPosition:beginning toPosition:position];
+                NSUInteger startPosition = [webView offsetFromPosition:beginning toPosition:webView.markedTextRange.start];
+                
+                [keyboardImpl setMarkedText:[keyboardImpl markedText] selectedRange:NSMakeRange(rangeStartPosition-startPosition, 0) inputString:[keyboardImpl markedText] searchString:[keyboardImpl searchStringForMarkedText]];
+                [keyboardImpl generateCandidates];
+            }
+        }
         if ([webView respondsToSelector:@selector(endSelectionChange)])
             [webView endSelectionChange];
     }
@@ -401,6 +420,19 @@ static void PopupMenuFromRect(CGRect rect)
             webView.selectedTextRange = range;
             // reveal for UITextField.
             [[%c(UIFieldEditor) sharedFieldEditor] revealSelection];
+            
+            // update Candidate strings
+            // iOS 7 only
+            if (!isSelectionMode && [keyboardImpl respondsToSelector:@selector(setMarkedText:selectedRange:inputString:searchString:)]) {
+                if ([keyboardImpl hasEditableMarkedText]) {
+                    UITextPosition *beginning = webView.beginningOfDocument;
+                    NSUInteger rangeStartPosition = [webView offsetFromPosition:beginning toPosition:position];
+                    NSUInteger startPosition = [webView offsetFromPosition:beginning toPosition:webView.markedTextRange.start];
+                    
+                    [keyboardImpl setMarkedText:[keyboardImpl markedText] selectedRange:NSMakeRange(rangeStartPosition-startPosition, 0) inputString:[keyboardImpl markedText] searchString:[keyboardImpl searchStringForMarkedText]];
+                    [keyboardImpl generateCandidates];
+                }
+            }
         }
     }
 }
