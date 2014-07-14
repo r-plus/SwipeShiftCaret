@@ -197,7 +197,7 @@ static void ShiftCaretToLeft(BOOL isLeftSwipe)
                 
                 TIKeyboardState *m_keyboardState = (TIKeyboardState *)[keyboardImpl valueForKey:@"m_keyboardState"];
                 if ([m_keyboardState isKindOfClass:%c(TIKeyboardState)]) {
-                    [keyboardImpl setMarkedText:[keyboardImpl markedText] selectedRange:NSMakeRange(rangeStartPosition-startPosition, 0) inputString:[m_keyboardState inputForMarkedText] searchString:[m_keyboardState searchStringForMarkedText]];
+                    [keyboardImpl setMarkedText:[keyboardImpl markedText] selectedRange:NSMakeRange(rangeStartPosition-startPosition, 0) inputString:[m_keyboardState inputForMarkedText] searchString:[keyboardImpl searchStringForMarkedText]];
                     [keyboardImpl generateCandidates];
                 }
             }
@@ -439,7 +439,7 @@ static void PopupMenuFromRect(CGRect rect)
                     
                     TIKeyboardState *m_keyboardState = (TIKeyboardState *)[keyboardImpl valueForKey:@"m_keyboardState"];
                     if ([m_keyboardState isKindOfClass:%c(TIKeyboardState)]) {
-                        [keyboardImpl setMarkedText:[keyboardImpl markedText] selectedRange:NSMakeRange(rangeStartPosition-startPosition, 0) inputString:[m_keyboardState inputForMarkedText] searchString:[m_keyboardState searchStringForMarkedText]];
+                        [keyboardImpl setMarkedText:[keyboardImpl markedText] selectedRange:NSMakeRange(rangeStartPosition-startPosition, 0) inputString:[m_keyboardState inputForMarkedText] searchString:[keyboardImpl searchStringForMarkedText]];
                         [keyboardImpl generateCandidates];
                     }
                 }
