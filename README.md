@@ -4,10 +4,6 @@ Caret micromanager shift the caret 1 char or continual via swipe.
 
 ![](http://dl.dropbox.com/u/149268/swipeshiftcaret_a_GIFSoup.com.gif)
 
-###Still not supports
-
-* IME candidate caret position.
-
 ###License
 ISC License
 
