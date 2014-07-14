@@ -38,12 +38,13 @@
 - (BOOL)caretVisible;
 @property (readonly, assign, nonatomic) UIResponder <UITextInputPrivate> *privateInputDelegate;
 @property (readonly, assign, nonatomic) UIResponder <UITextInput> *inputDelegate;
-- (void)setMarkedText:(id)arg1 selectedRange:(NSRange)arg2 inputString:(id)arg3 searchString:(id)arg4;
 - (id)searchStringForMarkedText;
-- (id)markedText;
 - (BOOL)hasEditableMarkedText;
 - (BOOL)hasMarkedText;
 - (void)generateCandidates;
+// iOS 7+
+- (id)markedText;
+- (void)setMarkedText:(id)arg1 selectedRange:(NSRange)arg2 inputString:(id)arg3 searchString:(id)arg4;
 @end
 
 @interface UIFieldEditor : NSObject
@@ -173,24 +174,34 @@ static void InstallPanGestureRecognizer()
     }
 }
 
-static void UpdateCandidate(UITextPosition *position)
+static void UpdateCaretAndCandidateIfNecessary(UITextRange *range)
 {
     UIKeyboardImpl *keyboardImpl = [%c(UIKeyboardImpl) sharedInstance];
-    // iOS 7+
-    if (![keyboardImpl respondsToSelector:@selector(setMarkedText:selectedRange:inputString:searchString:)])
-        return;
-    if (![keyboardImpl hasEditableMarkedText])
-        return;
     TIKeyboardState *m_keyboardState = (TIKeyboardState *)[keyboardImpl valueForKey:@"m_keyboardState"];
-    if (![m_keyboardState isKindOfClass:%c(TIKeyboardState)])
+    // if nou supported update markedtext, only update caret position.
+    if (!webView.markedTextRange ||
+            isSelectionMode ||
+            ![keyboardImpl respondsToSelector:@selector(setMarkedText:selectedRange:inputString:searchString:)] ||
+            ![m_keyboardState isKindOfClass:%c(TIKeyboardState)]) {
+        webView.selectedTextRange = range;
         return;
+    }
+
+    // markedText edge over check.
+    NSComparisonResult result;
+    result = [webView comparePosition:range.start toPosition:webView.markedTextRange.start];
+    if (result == NSOrderedAscending)
+        range = [webView textRangeFromPosition:webView.markedTextRange.start toPosition:webView.markedTextRange.start];
+    result = [webView comparePosition:range.end toPosition:webView.markedTextRange.end];
+    if (result == NSOrderedDescending)
+        range = [webView textRangeFromPosition:webView.markedTextRange.end toPosition:webView.markedTextRange.end];
 
     UITextPosition *beginning = webView.beginningOfDocument;
-    NSUInteger rangeStartPosition = [webView offsetFromPosition:beginning toPosition:position];
-    NSUInteger startPosition = [webView offsetFromPosition:beginning toPosition:webView.markedTextRange.start];
+    NSUInteger offsetToTargetPosition = [webView offsetFromPosition:beginning toPosition:range.start];
+    NSUInteger offsetToMarkedTextPosition = [webView offsetFromPosition:beginning toPosition:webView.markedTextRange.start];
 
     [keyboardImpl setMarkedText:[keyboardImpl markedText]
-                  selectedRange:NSMakeRange(rangeStartPosition-startPosition, 0)
+                  selectedRange:NSMakeRange(offsetToTargetPosition-offsetToMarkedTextPosition, 0)
                     inputString:[m_keyboardState inputForMarkedText]
                    searchString:[keyboardImpl searchStringForMarkedText]];
     [keyboardImpl generateCandidates];
@@ -206,12 +217,9 @@ static void ShiftCaretToLeft(BOOL isLeftSwipe)
         if (!position)
             return;
         UITextRange *range = [webView textRangeFromPosition:position toPosition:position];
-        if ([webView respondsToSelector:@selector(beginSelectionChange)])
-            [webView beginSelectionChange];
-        webView.selectedTextRange = range;
-        UpdateCandidate(position);
-        if ([webView respondsToSelector:@selector(endSelectionChange)])
-            [webView endSelectionChange];
+        [webView beginSelectionChange];
+        UpdateCaretAndCandidateIfNecessary(range);
+        [webView endSelectionChange];
     }
 
     // reveal for UITextField.
@@ -237,10 +245,14 @@ static void PopupMenuFromRect(CGRect rect)
     UITouch *touch = [touches anyObject];
     UIKBKey *kb = [self keyHitTest:[touch locationInView:touch.view]];
     NSString *kbString = [kb displayString];
-    if ([kbString isEqualToString:@"あいう"] ||
-            [kbString isEqualToString:@"ABC"] ||
-            [kbString isEqualToString:@"☆123"] ||
-            [kbString isEqualToString:@"123"])
+    if (!webView.markedTextRange &&
+            (
+             [kbString isEqualToString:@"あいう"] ||
+             [kbString isEqualToString:@"ABC"] ||
+             [kbString isEqualToString:@"☆123"] ||
+             [kbString isEqualToString:@"123"]
+            )
+       )
         isSelectionMode = YES;
     else
         isSelectionMode = NO;
@@ -325,7 +337,9 @@ static void PopupMenuFromRect(CGRect rect)
         return;
 
     static BOOL isLeftPanning = YES;
-    static UITextRange *beginningTextRange;
+    static BOOL beginningRangeIsEmpty;
+    static UITextPosition *beginningStartPosition;
+    static UITextPosition *beginningEndPosition;
     static int numberOfTouches = 0;
     static CGPoint previousVelocityPoint;
 
@@ -348,9 +362,12 @@ static void PopupMenuFromRect(CGRect rect)
         previousVelocityPoint = CGPointMake(0,0);
         isLeftPanning = YES;
         gesture.cancelsTouchesInView = NO;
-        if (beginningTextRange)
-            [beginningTextRange release];
-        beginningTextRange = nil;
+        if (beginningStartPosition)
+            [beginningStartPosition release];
+        beginningStartPosition = nil;
+        if (beginningEndPosition)
+            [beginningEndPosition release];
+        beginningEndPosition = nil;
 
         // reveal for UITextView, UITextContentView and UIWebDocumentView.
         if ([tv respondsToSelector:@selector(scrollSelectionToVisible:)] && hasStarted)
@@ -365,17 +382,16 @@ static void PopupMenuFromRect(CGRect rect)
         }
         
         // fix text deletion issue during Korean syllable composing
-        if ([webView respondsToSelector:@selector(endSelectionChange)])
-            [webView endSelectionChange];
+        [webView endSelectionChange];
 
     } else if (gesture.state == UIGestureRecognizerStateBegan) {
 
-        if ([webView respondsToSelector:@selector(positionFromPosition:inDirection:offset:)])
-            beginningTextRange = [webView.selectedTextRange retain];
+        beginningStartPosition = [webView.selectedTextRange.start retain];
+        beginningEndPosition = [webView.selectedTextRange.end retain];
+        beginningRangeIsEmpty = [webView comparePosition:beginningStartPosition toPosition:beginningEndPosition] == NSOrderedSame;
         
         // fix text deletion issue during Korean syllable composing
-        if ([webView respondsToSelector:@selector(beginSelectionChange)])
-            [webView beginSelectionChange];
+        [webView beginSelectionChange];
 
     } else if (gesture.state == UIGestureRecognizerStateChanged) {
 
@@ -403,12 +419,12 @@ static void PopupMenuFromRect(CGRect rect)
         if ([webView respondsToSelector:@selector(positionFromPosition:inDirection:offset:)]) {
             UITextPosition *position = nil;
             // Horizontal Move.
-            if (beginningTextRange.isEmpty) {
-                position = [webView positionFromPosition:beginningTextRange.start
+            if (beginningRangeIsEmpty) {
+                position = [webView positionFromPosition:beginningStartPosition
                     inDirection:xPointChanged < 0 ? UITextLayoutDirectionLeft : UITextLayoutDirectionRight
                     offset:abs(xPointChanged)];
             } else {
-                position = [webView positionFromPosition:isLeftPanning ? beginningTextRange.start : beginningTextRange.end
+                position = [webView positionFromPosition:isLeftPanning ? beginningStartPosition : beginningEndPosition
                     inDirection:xPointChanged < 0 ? UITextLayoutDirectionLeft : UITextLayoutDirectionRight
                     offset:abs(xPointChanged)];
             }
@@ -428,20 +444,14 @@ static void PopupMenuFromRect(CGRect rect)
             if (!isSelectionMode) {
                 range = [webView textRangeFromPosition:position toPosition:position];
             } else {
-                if (beginningTextRange.isEmpty)
-                    range = [webView textRangeFromPosition:beginningTextRange.start toPosition:position];
+                if (beginningRangeIsEmpty)
+                    range = [webView textRangeFromPosition:beginningStartPosition toPosition:position];
                 else
-                    range = [webView textRangeFromPosition:isLeftPanning ? beginningTextRange.end : beginningTextRange.start toPosition:position];
+                    range = [webView textRangeFromPosition:isLeftPanning ? beginningEndPosition : beginningStartPosition toPosition:position];
             }
-            webView.selectedTextRange = range;
+            UpdateCaretAndCandidateIfNecessary(range);
             // reveal for UITextField.
             [[%c(UIFieldEditor) sharedFieldEditor] revealSelection];
-            
-            // update Candidate strings
-            // iOS 7 only
-            if (!isSelectionMode) {
-                UpdateCandidate(position);
-            }
         }
     }
 }
