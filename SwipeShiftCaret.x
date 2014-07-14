@@ -27,6 +27,11 @@
 @protocol UITextInputPrivate <UITextInput, UITextInputTokenizer>
 @end
 
+@interface TIKeyboardState : NSObject
+@property(copy, nonatomic) NSString *searchStringForMarkedText;
+@property(copy, nonatomic) NSString *inputForMarkedText;
+@end
+
 @interface UIKeyboardImpl : NSObject
 + (id)sharedInstance;
 - (BOOL)callLayoutIsShiftKeyBeingHeld;
@@ -190,8 +195,11 @@ static void ShiftCaretToLeft(BOOL isLeftSwipe)
                 NSUInteger rangeStartPosition = [webView offsetFromPosition:beginning toPosition:position];
                 NSUInteger startPosition = [webView offsetFromPosition:beginning toPosition:webView.markedTextRange.start];
                 
-                [keyboardImpl setMarkedText:[keyboardImpl markedText] selectedRange:NSMakeRange(rangeStartPosition-startPosition, 0) inputString:[keyboardImpl markedText] searchString:[keyboardImpl searchStringForMarkedText]];
-                [keyboardImpl generateCandidates];
+                TIKeyboardState *m_keyboardState = (TIKeyboardState *)[keyboardImpl valueForKey:@"m_keyboardState"];
+                if ([m_keyboardState isKindOfClass:%c(TIKeyboardState)]) {
+                    [keyboardImpl setMarkedText:[keyboardImpl markedText] selectedRange:NSMakeRange(rangeStartPosition-startPosition, 0) inputString:[m_keyboardState inputForMarkedText] searchString:[m_keyboardState searchStringForMarkedText]];
+                    [keyboardImpl generateCandidates];
+                }
             }
         }
         if ([webView respondsToSelector:@selector(endSelectionChange)])
@@ -429,8 +437,11 @@ static void PopupMenuFromRect(CGRect rect)
                     NSUInteger rangeStartPosition = [webView offsetFromPosition:beginning toPosition:position];
                     NSUInteger startPosition = [webView offsetFromPosition:beginning toPosition:webView.markedTextRange.start];
                     
-                    [keyboardImpl setMarkedText:[keyboardImpl markedText] selectedRange:NSMakeRange(rangeStartPosition-startPosition, 0) inputString:[keyboardImpl markedText] searchString:[keyboardImpl searchStringForMarkedText]];
-                    [keyboardImpl generateCandidates];
+                    TIKeyboardState *m_keyboardState = (TIKeyboardState *)[keyboardImpl valueForKey:@"m_keyboardState"];
+                    if ([m_keyboardState isKindOfClass:%c(TIKeyboardState)]) {
+                        [keyboardImpl setMarkedText:[keyboardImpl markedText] selectedRange:NSMakeRange(rangeStartPosition-startPosition, 0) inputString:[m_keyboardState inputForMarkedText] searchString:[m_keyboardState searchStringForMarkedText]];
+                        [keyboardImpl generateCandidates];
+                    }
                 }
             }
         }
