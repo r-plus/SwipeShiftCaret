@@ -173,6 +173,29 @@ static void InstallPanGestureRecognizer()
     }
 }
 
+static void UpdateCandidate(UITextPosition *position)
+{
+    UIKeyboardImpl *keyboardImpl = [%c(UIKeyboardImpl) sharedInstance];
+    // iOS 7+
+    if (![keyboardImpl respondsToSelector:@selector(setMarkedText:selectedRange:inputString:searchString:)])
+        return;
+    if (![keyboardImpl hasEditableMarkedText])
+        return;
+    TIKeyboardState *m_keyboardState = (TIKeyboardState *)[keyboardImpl valueForKey:@"m_keyboardState"];
+    if (![m_keyboardState isKindOfClass:%c(TIKeyboardState)])
+        return;
+
+    UITextPosition *beginning = webView.beginningOfDocument;
+    NSUInteger rangeStartPosition = [webView offsetFromPosition:beginning toPosition:position];
+    NSUInteger startPosition = [webView offsetFromPosition:beginning toPosition:webView.markedTextRange.start];
+
+    [keyboardImpl setMarkedText:[keyboardImpl markedText]
+                  selectedRange:NSMakeRange(rangeStartPosition-startPosition, 0)
+                    inputString:[m_keyboardState inputForMarkedText]
+                   searchString:[keyboardImpl searchStringForMarkedText]];
+    [keyboardImpl generateCandidates];
+}
+
 static void ShiftCaretToLeft(BOOL isLeftSwipe)
 {
     if ([webView respondsToSelector:@selector(positionFromPosition:inDirection:offset:)]) {
@@ -186,22 +209,7 @@ static void ShiftCaretToLeft(BOOL isLeftSwipe)
         if ([webView respondsToSelector:@selector(beginSelectionChange)])
             [webView beginSelectionChange];
         webView.selectedTextRange = range;
-        // update Candidate strings
-        // iOS 7 only
-        UIKeyboardImpl *keyboardImpl = [%c(UIKeyboardImpl) sharedInstance];
-        if ([keyboardImpl respondsToSelector:@selector(setMarkedText:selectedRange:inputString:searchString:)]) {
-            if ([keyboardImpl hasEditableMarkedText]) {
-                UITextPosition *beginning = webView.beginningOfDocument;
-                NSUInteger rangeStartPosition = [webView offsetFromPosition:beginning toPosition:position];
-                NSUInteger startPosition = [webView offsetFromPosition:beginning toPosition:webView.markedTextRange.start];
-                
-                TIKeyboardState *m_keyboardState = (TIKeyboardState *)[keyboardImpl valueForKey:@"m_keyboardState"];
-                if ([m_keyboardState isKindOfClass:%c(TIKeyboardState)]) {
-                    [keyboardImpl setMarkedText:[keyboardImpl markedText] selectedRange:NSMakeRange(rangeStartPosition-startPosition, 0) inputString:[m_keyboardState inputForMarkedText] searchString:[keyboardImpl searchStringForMarkedText]];
-                    [keyboardImpl generateCandidates];
-                }
-            }
-        }
+        UpdateCandidate(position);
         if ([webView respondsToSelector:@selector(endSelectionChange)])
             [webView endSelectionChange];
     }
@@ -431,18 +439,8 @@ static void PopupMenuFromRect(CGRect rect)
             
             // update Candidate strings
             // iOS 7 only
-            if (!isSelectionMode && [keyboardImpl respondsToSelector:@selector(setMarkedText:selectedRange:inputString:searchString:)]) {
-                if ([keyboardImpl hasEditableMarkedText]) {
-                    UITextPosition *beginning = webView.beginningOfDocument;
-                    NSUInteger rangeStartPosition = [webView offsetFromPosition:beginning toPosition:position];
-                    NSUInteger startPosition = [webView offsetFromPosition:beginning toPosition:webView.markedTextRange.start];
-                    
-                    TIKeyboardState *m_keyboardState = (TIKeyboardState *)[keyboardImpl valueForKey:@"m_keyboardState"];
-                    if ([m_keyboardState isKindOfClass:%c(TIKeyboardState)]) {
-                        [keyboardImpl setMarkedText:[keyboardImpl markedText] selectedRange:NSMakeRange(rangeStartPosition-startPosition, 0) inputString:[m_keyboardState inputForMarkedText] searchString:[keyboardImpl searchStringForMarkedText]];
-                        [keyboardImpl generateCandidates];
-                    }
-                }
+            if (!isSelectionMode) {
+                UpdateCandidate(position);
             }
         }
     }
