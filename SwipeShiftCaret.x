@@ -56,6 +56,11 @@
 - (UIKBKey *)keyHitTest:(CGPoint)arg;
 - (NSString *)displayString;
 @end
+
+@interface UITextMagnifierRanged
+@property (retain) UIView *target;
++ (id)sharedRangedMagnifier;
+@end
 // }}}
 
 // global variables {{{
@@ -176,6 +181,9 @@ static void InstallPanGestureRecognizer()
 
 static void UpdateCaretAndCandidateIfNecessary(UITextRange *range)
 {
+    // return target(firstresponder) view if showing magnifier view to zoom IME converting strings.
+    if ([[%c(UITextMagnifierRanged) sharedRangedMagnifier] target])
+        return;
     UIKeyboardImpl *keyboardImpl = [%c(UIKeyboardImpl) sharedInstance];
     TIKeyboardState *m_keyboardState = (TIKeyboardState *)[keyboardImpl valueForKey:@"m_keyboardState"];
     // if nou supported update markedtext, only update caret position.
