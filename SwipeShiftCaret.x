@@ -181,13 +181,14 @@ static void InstallPanGestureRecognizer()
 
 static void UpdateCaretAndCandidateIfNecessary(UITextRange *range)
 {
+    UITextRange *markedTextRange = webView.markedTextRange;
     // return target(firstresponder) view if showing magnifier view to zoom IME converting strings.
-    if ([[%c(UITextMagnifierRanged) sharedRangedMagnifier] target])
+    if (markedTextRange && [[%c(UITextMagnifierRanged) sharedRangedMagnifier] target])
         return;
     UIKeyboardImpl *keyboardImpl = [%c(UIKeyboardImpl) sharedInstance];
     TIKeyboardState *m_keyboardState = (TIKeyboardState *)[keyboardImpl valueForKey:@"m_keyboardState"];
     // if nou supported update markedtext, only update caret position.
-    if (!webView.markedTextRange ||
+    if (!markedTextRange ||
             isSelectionMode ||
             ![keyboardImpl respondsToSelector:@selector(setMarkedText:selectedRange:inputString:searchString:)] ||
             ![m_keyboardState isKindOfClass:%c(TIKeyboardState)]) {
@@ -197,16 +198,16 @@ static void UpdateCaretAndCandidateIfNecessary(UITextRange *range)
 
     // markedText edge over check.
     NSComparisonResult result;
-    result = [webView comparePosition:range.start toPosition:webView.markedTextRange.start];
+    result = [webView comparePosition:range.start toPosition:markedTextRange.start];
     if (result == NSOrderedAscending)
-        range = [webView textRangeFromPosition:webView.markedTextRange.start toPosition:webView.markedTextRange.start];
-    result = [webView comparePosition:range.end toPosition:webView.markedTextRange.end];
+        range = [webView textRangeFromPosition:markedTextRange.start toPosition:markedTextRange.start];
+    result = [webView comparePosition:range.end toPosition:markedTextRange.end];
     if (result == NSOrderedDescending)
-        range = [webView textRangeFromPosition:webView.markedTextRange.end toPosition:webView.markedTextRange.end];
+        range = [webView textRangeFromPosition:markedTextRange.end toPosition:markedTextRange.end];
 
     UITextPosition *beginning = webView.beginningOfDocument;
     NSUInteger offsetToTargetPosition = [webView offsetFromPosition:beginning toPosition:range.start];
-    NSUInteger offsetToMarkedTextPosition = [webView offsetFromPosition:beginning toPosition:webView.markedTextRange.start];
+    NSUInteger offsetToMarkedTextPosition = [webView offsetFromPosition:beginning toPosition:markedTextRange.start];
 
     [keyboardImpl setMarkedText:[keyboardImpl markedText]
                   selectedRange:NSMakeRange(offsetToTargetPosition-offsetToMarkedTextPosition, 0)
