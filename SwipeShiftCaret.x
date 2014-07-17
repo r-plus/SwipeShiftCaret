@@ -186,15 +186,12 @@ static void UpdateCaretAndCandidateIfNecessary(UITextRange *range)
     if (markedTextRange && [[%c(UITextMagnifierRanged) sharedRangedMagnifier] target])
         return;
     UIKeyboardImpl *keyboardImpl = [%c(UIKeyboardImpl) sharedInstance];
-    TIKeyboardState *m_keyboardState = (TIKeyboardState *)[keyboardImpl valueForKey:@"m_keyboardState"];
-    // if nou supported update markedtext(iOS 7+ and have markedText), only update caret position.
-    if (!markedTextRange ||
-            isSelectionMode ||
-            ![keyboardImpl respondsToSelector:@selector(setMarkedText:selectedRange:inputString:searchString:)] ||
-            ![m_keyboardState isKindOfClass:%c(TIKeyboardState)]) {
+    // if nou supported update markedtext, only update caret position.
+    if (!markedTextRange || isSelectionMode || kCFCoreFoundationVersionNumber < kCFCoreFoundationVersionNumber_iOS_7_0) {
         webView.selectedTextRange = range;
         return;
     }
+    TIKeyboardState *m_keyboardState = (TIKeyboardState *)[keyboardImpl valueForKey:@"m_keyboardState"];
 
     // markedText edge over check.
     NSComparisonResult result;
