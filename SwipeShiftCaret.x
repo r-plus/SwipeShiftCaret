@@ -187,7 +187,7 @@ static void UpdateCaretAndCandidateIfNecessary(UITextRange *range)
         return;
     UIKeyboardImpl *keyboardImpl = [%c(UIKeyboardImpl) sharedInstance];
     TIKeyboardState *m_keyboardState = (TIKeyboardState *)[keyboardImpl valueForKey:@"m_keyboardState"];
-    // if nou supported update markedtext, only update caret position.
+    // if nou supported update markedtext(iOS 7+ and have markedText), only update caret position.
     if (!markedTextRange ||
             isSelectionMode ||
             ![keyboardImpl respondsToSelector:@selector(setMarkedText:selectedRange:inputString:searchString:)] ||
