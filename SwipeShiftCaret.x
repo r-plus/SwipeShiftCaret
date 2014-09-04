@@ -181,7 +181,9 @@ static void InstallPanGestureRecognizer()
 
 static void UpdateCaretAndCandidateIfNecessary(UITextRange *range)
 {
-    UITextRange *markedTextRange = webView.markedTextRange;
+    UITextRange *markedTextRange = nil;
+    if ([webView respondsToSelector:@selector(markedTextRange)])
+        markedTextRange = webView.markedTextRange;
     // return target(firstresponder) view if showing magnifier view to zoom IME converting strings.
     if (markedTextRange && [[%c(UITextMagnifierRanged) sharedRangedMagnifier] target])
         return;
@@ -245,23 +247,26 @@ static void PopupMenuFromRect(CGRect rect)
 
 // Hooks {{{
 %hook UIKeyboardLayoutStar
+static BOOL IsForSelectionModeString(NSString * string)
+{
+    return ([string isEqualToString:@"あいう"] ||
+            [string isEqualToString:@"ABC"] ||
+            [string isEqualToString:@"☆123"] ||
+            [string isEqualToString:@"123"]
+           );
+}
+
 - (void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event
 {
     %orig;
     UITouch *touch = [touches anyObject];
     UIKBKey *kb = [self keyHitTest:[touch locationInView:touch.view]];
     NSString *kbString = [kb displayString];
-    if (!webView.markedTextRange &&
-            (
-             [kbString isEqualToString:@"あいう"] ||
-             [kbString isEqualToString:@"ABC"] ||
-             [kbString isEqualToString:@"☆123"] ||
-             [kbString isEqualToString:@"123"]
-            )
-       )
-        isSelectionMode = YES;
-    else
-        isSelectionMode = NO;
+    if ([webView respondsToSelector:@selector(markedTextRange)]) {
+        isSelectionMode = (!webView.markedTextRange && IsForSelectionModeString(kbString));
+    } else {
+        isSelectionMode = IsForSelectionModeString(kbString);
+    }
 }
 
 - (void)touchesCancelled:(id)arg1 withEvent:(id)arg2
