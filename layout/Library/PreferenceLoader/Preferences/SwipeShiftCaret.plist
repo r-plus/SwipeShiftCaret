@@ -57,20 +57,6 @@
                 <key>cell</key>
                 <string>PSSwitchCell</string>
                 <key>default</key>
-                <false/>
-                <key>defaults</key>
-                <string>jp.r-plus.SwipeShiftCaret</string>
-                <key>key</key>
-                <string>MoveWithScrollModeEnabled</string>
-                <key>label</key>
-                <string>MoveWithHorizonScroll</string>
-                <key>PostNotification</key>
-                <string>jp.r-plus.swipeshiftcaret.settingschanged</string>
-            </dict>
-            <dict>
-                <key>cell</key>
-                <string>PSSwitchCell</string>
-                <key>default</key>
                 <true/>
                 <key>defaults</key>
                 <string>jp.r-plus.SwipeShiftCaret</string>

@@ -72,7 +72,6 @@ static BOOL verticalScrollLockIsEnabled;
 static BOOL verticalScrollLockAnsMoveIsEnabled;
 static BOOL isSelectionMode = NO;
 static BOOL hasStarted = NO;
-static BOOL isMoveWithScrollMode = NO;
 static BOOL isPreventSwipeLoupe;
 // }}}
 
@@ -85,12 +84,6 @@ static BOOL isPreventSwipeLoupe;
 {
     if ([gesture isMemberOfClass:[SCSwipeGestureRecognizer class]])
         return YES;
-    if (isMoveWithScrollMode)
-        return NO;
-    if ([gesture isKindOfClass:[UIPanGestureRecognizer class]] &&
-            ![gesture.view isKindOfClass:%c(CKMessageEntryView)] &&
-            ![[[NSBundle mainBundle] bundleIdentifier] isEqualToString:@"com.google.Gmail"])
-        self.state = UIGestureRecognizerStateFailed;
     return NO;
 }
 
@@ -115,12 +108,6 @@ static BOOL isPreventSwipeLoupe;
 {
     if ([gesture isMemberOfClass:[SCPanGestureRecognizer class]])
         return YES;
-    if (isMoveWithScrollMode)
-        return NO;
-    if ([gesture isKindOfClass:[UIPanGestureRecognizer class]] &&
-            ![gesture.view isKindOfClass:%c(CKMessageEntryView)] &&
-            ![[[NSBundle mainBundle] bundleIdentifier] isEqualToString:@"com.google.Gmail"])
-        self.state = UIGestureRecognizerStateCancelled;
     return NO;
 }
 
@@ -480,8 +467,6 @@ static void LoadSettings()
     verticalScrollLockIsEnabled = verticalScrollLockPref ? [verticalScrollLockPref boolValue] : NO;
     id verticalScrollLockAndMovePref = [dict objectForKey:@"VLockAndMoveEnabled"];
     verticalScrollLockAnsMoveIsEnabled = verticalScrollLockAndMovePref ? [verticalScrollLockAndMovePref boolValue] : NO;
-    id moveWithScrollModePref = [dict objectForKey:@"MoveWithScrollModeEnabled"];
-    isMoveWithScrollMode = moveWithScrollModePref ? [moveWithScrollModePref boolValue] : NO;
     id preventSwipeLoupePref = [dict objectForKey:@"PreventSwipeLoupe"];
     isPreventSwipeLoupe = preventSwipeLoupePref ? [preventSwipeLoupePref boolValue] : YES;
     if (tv) {
