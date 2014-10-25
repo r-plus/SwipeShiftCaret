@@ -69,7 +69,7 @@ static UIWebDocumentView *webView;
 static BOOL panGestureEnabled;
 static BOOL fasterByVelocityIsEnabled;
 static BOOL verticalScrollLockIsEnabled;
-static BOOL verticalScrollLockAnsMoveIsEnabled;
+static BOOL verticalScrollLockAndMoveIsEnabled;
 static BOOL isSelectionMode = NO;
 static BOOL hasStarted = NO;
 static BOOL isPreventSwipeLoupe;
@@ -122,7 +122,7 @@ static BOOL isPreventSwipeLoupe;
         return NO;
     // v.scroll lock option
     if (hasStarted && [gesture isKindOfClass:[UIPanGestureRecognizer class]])
-        if (verticalScrollLockIsEnabled || verticalScrollLockAnsMoveIsEnabled)
+        if (verticalScrollLockIsEnabled || verticalScrollLockAndMoveIsEnabled)
             return YES;
     // UIDragRecognizer action @selector(loupeGesture:) since iOS 7+
     // But caret shift performance is too bad even if prevent this gestureRecognizer.
@@ -427,7 +427,7 @@ static BOOL IsForSelectionModeString(NSString * string)
                     offset:abs(xPointChanged)];
             }
             // Vertical Move.
-            if (verticalScrollLockAnsMoveIsEnabled) {
+            if (verticalScrollLockAndMoveIsEnabled) {
                 position = [webView positionFromPosition:position
                     inDirection:yPointsChanged < 0 ? UITextLayoutDirectionUp : UITextLayoutDirectionDown
                     offset:abs(yPointsChanged)];
@@ -466,7 +466,7 @@ static void LoadSettings()
     id verticalScrollLockPref = [dict objectForKey:@"LockVerticalScrollEnabled"];
     verticalScrollLockIsEnabled = verticalScrollLockPref ? [verticalScrollLockPref boolValue] : NO;
     id verticalScrollLockAndMovePref = [dict objectForKey:@"VLockAndMoveEnabled"];
-    verticalScrollLockAnsMoveIsEnabled = verticalScrollLockAndMovePref ? [verticalScrollLockAndMovePref boolValue] : NO;
+    verticalScrollLockAndMoveIsEnabled = verticalScrollLockAndMovePref ? [verticalScrollLockAndMovePref boolValue] : NO;
     id preventSwipeLoupePref = [dict objectForKey:@"PreventSwipeLoupe"];
     isPreventSwipeLoupe = preventSwipeLoupePref ? [preventSwipeLoupePref boolValue] : YES;
     if (tv) {
