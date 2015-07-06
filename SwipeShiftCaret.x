@@ -1,3 +1,4 @@
+#import <ColorLog.h>
 #import <Firmware.h>
 #import <UIKit/UIKit.h>
 #import <UIKit/UIGestureRecognizerSubclass.h>
@@ -5,6 +6,14 @@
 #define PREF_PATH @"/var/mobile/Library/Preferences/jp.r-plus.SwipeShiftCaret.plist"
 
 // interfaces {{{
+@interface WKContentView
+- (NSString *)selectedText;
+- (void)_moveRight:(BOOL)extend withHistory:(id)history;
+- (void)_moveLeft:(BOOL)extend withHistory:(id)history;
+- (void)selectWordBackward;
+- (void)executeEditCommandWithCallback:(NSString *)commandName;
+@end
+
 @interface UIWebDocumentView : UIView <UITextInput>
 - (BOOL)isEditing;
 - (void)beginSelectionChange;
@@ -204,7 +213,13 @@ static void UpdateCaretAndCandidateIfNecessary(UITextRange *range)
 
 static void ShiftCaretToLeft(BOOL isLeftSwipe)
 {
-    if ([webView respondsToSelector:@selector(positionFromPosition:inDirection:offset:)]) {
+    if ([webView isKindOfClass:%c(WKContentView)]) {
+        // iOS 8+ WebKit.framework base view.
+        if (isLeftSwipe)
+            [(WKContentView *)webView _moveLeft:NO withHistory:nil];
+        else
+            [(WKContentView *)webView _moveRight:NO withHistory:nil];
+    } else if ([webView respondsToSelector:@selector(positionFromPosition:inDirection:offset:)]) {
         UITextPosition *position = nil;
         position = isLeftSwipe ? [webView positionFromPosition:webView.selectedTextRange.start inDirection:UITextLayoutDirectionLeft offset:1]
             : [webView positionFromPosition:webView.selectedTextRange.end inDirection:UITextLayoutDirectionRight offset:1];
@@ -340,6 +355,8 @@ static BOOL IsForSelectionModeString(NSString * string)
     static UITextPosition *beginningEndPosition;
     static int numberOfTouches = 0;
     static CGPoint previousVelocityPoint;
+    static int previousXOffset = 0;
+    static int previousYOffset = 0;
 
     int touchesCount = [gesture numberOfTouches];
     if (touchesCount > numberOfTouches)
@@ -366,6 +383,8 @@ static BOOL IsForSelectionModeString(NSString * string)
         if (beginningEndPosition)
             [beginningEndPosition release];
         beginningEndPosition = nil;
+        previousXOffset = 0;
+        previousYOffset = 0;
 
         // reveal for UITextView, UITextContentView and UIWebDocumentView.
         if ([tv respondsToSelector:@selector(scrollSelectionToVisible:)] && hasStarted)
@@ -411,20 +430,58 @@ static BOOL IsForSelectionModeString(NSString * string)
             previousVelocityPoint = velo;
         }
         int scale = 16 / numberOfTouches ? : 1;
-        int xPointChanged = offset.x / scale;
+        int xPointsChanged = offset.x / scale;
         int yPointsChanged = offset.y / scale;
 
-        if ([webView respondsToSelector:@selector(positionFromPosition:inDirection:offset:)]) {
+        if ([webView isKindOfClass:%c(WKContentView)]) {
+            // WebKit based view.
+
+            // Horizontal Move.
+            if (xPointsChanged == previousXOffset) {
+                // do nothing.
+            } else if (xPointsChanged > previousXOffset) {
+                // isRightSwipe:
+                for(; xPointsChanged > previousXOffset; previousXOffset++) {
+                    [(WKContentView *)webView executeEditCommandWithCallback:isSelectionMode ? @"moveRightAndModifySelection" : @"moveRight"];
+                }
+            } else {
+                // isLeftSwipe:
+                for(; xPointsChanged < previousXOffset; previousXOffset--) {
+                    [(WKContentView *)webView executeEditCommandWithCallback:isSelectionMode ? @"moveLeftAndModifySelection" : @"moveLeft"];
+                }
+            }
+
+            // Vertical Move.
+            if (verticalScrollLockAndMoveIsEnabled) {
+                if (yPointsChanged == previousYOffset) {
+                    // do nothing.
+                } else if (yPointsChanged > previousYOffset) {
+                    // isDownSwipe:
+                    for(; yPointsChanged > previousYOffset; previousYOffset++) {
+                        [(WKContentView *)webView executeEditCommandWithCallback:isSelectionMode ? @"moveDownAndModifySelection" : @"moveDown"];
+                    }
+                } else {
+                    // isUpSwipe:
+                    for(; yPointsChanged < previousYOffset; previousYOffset--) {
+                        [(WKContentView *)webView executeEditCommandWithCallback:isSelectionMode ? @"moveUpAndModifySelection" : @"moveUp"];
+                    }
+                }
+            }
+
+            // No need manually reveal, automatically reveal via framework.
+
+        } else if ([webView respondsToSelector:@selector(positionFromPosition:inDirection:offset:)]) {
+            // UIKit based view.
             UITextPosition *position = nil;
             // Horizontal Move.
             if (beginningRangeIsEmpty) {
                 position = [webView positionFromPosition:beginningStartPosition
-                    inDirection:xPointChanged < 0 ? UITextLayoutDirectionLeft : UITextLayoutDirectionRight
-                    offset:abs(xPointChanged)];
+                    inDirection:xPointsChanged < 0 ? UITextLayoutDirectionLeft : UITextLayoutDirectionRight
+                    offset:abs(xPointsChanged)];
             } else {
                 position = [webView positionFromPosition:isLeftPanning ? beginningStartPosition : beginningEndPosition
-                    inDirection:xPointChanged < 0 ? UITextLayoutDirectionLeft : UITextLayoutDirectionRight
-                    offset:abs(xPointChanged)];
+                    inDirection:xPointsChanged < 0 ? UITextLayoutDirectionLeft : UITextLayoutDirectionRight
+                    offset:abs(xPointsChanged)];
             }
             // Vertical Move.
             if (verticalScrollLockAndMoveIsEnabled) {
@@ -434,7 +491,7 @@ static BOOL IsForSelectionModeString(NSString * string)
             }
             // over edge correction.
             if (!position) {
-                position = xPointChanged < 0 ? webView.beginningOfDocument : webView.endOfDocument;
+                position = xPointsChanged < 0 ? webView.beginningOfDocument : webView.endOfDocument;
             }
 
             // ShiftCaret
