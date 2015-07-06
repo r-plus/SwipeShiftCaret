@@ -394,9 +394,9 @@ static BOOL IsForSelectionModeString(NSString * string)
     } else if (gesture.state == UIGestureRecognizerStateChanged) {
 
         CGPoint offset = [gesture translationInView:tv];
-        if (!hasStarted && abs(offset.x) < 16)
+        if (!hasStarted && fabs(offset.x) < 16.0)
             return;
-        if (!hasStarted && abs(offset.x) < abs(offset.y)) {
+        if (!hasStarted && fabs(offset.x) < fabs(offset.y)) {
             gesture.state = UIGestureRecognizerStateEnded;
             return;
         }
@@ -406,8 +406,8 @@ static BOOL IsForSelectionModeString(NSString * string)
         hasStarted = YES;
         if (fasterByVelocityIsEnabled) {
             CGPoint velo = [gesture velocityInView:tv];
-            if (abs(previousVelocityPoint.x) < 1000 && abs(velo.x) / 1000 != 0)
-                numberOfTouches += (abs(velo.x) / 1000);
+            if (fabs(previousVelocityPoint.x) < 1000.0 && fabs(velo.x) / 1000.0 != 0)
+                numberOfTouches += (fabs(velo.x) / 1000.0);
             previousVelocityPoint = velo;
         }
         int scale = 16 / numberOfTouches ? : 1;
