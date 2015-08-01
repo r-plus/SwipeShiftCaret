@@ -1,5 +1,8 @@
 language: objective-c
 
+env:
+  - THEOS=theos
+
 before_install:
   - brew update
   - brew install dpkg
