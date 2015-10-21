@@ -284,7 +284,7 @@ static BOOL IsForSelectionModeString(NSString * string)
 }
 %end
 
-%group iOS_ge_70
+%group iOS_ge_70_lt_90
 %hook UIDragRecognizer
 - (BOOL)canBeginDrag
 {
@@ -545,8 +545,8 @@ static void PostNotification(CFNotificationCenterRef center, void *observer, CFS
         CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(), NULL, PostNotification, CFSTR("jp.r-plus.swipeshiftcaret.settingschanged"), NULL, CFNotificationSuspensionBehaviorCoalesce);
         LoadSettings();
         %init;
-        if (kCFCoreFoundationVersionNumber >= kCFCoreFoundationVersionNumber_iOS_7_0)
-            %init(iOS_ge_70);
+        if (kCFCoreFoundationVersionNumber >= kCFCoreFoundationVersionNumber_iOS_7_0 && kCFCoreFoundationVersionNumber < kCFCoreFoundationVersionNumber_iOS_9_0)
+            %init(iOS_ge_70_lt_90);
     }
 }
 

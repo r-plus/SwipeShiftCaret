@@ -52,6 +52,14 @@
                 <string>PSGroupCell</string>
                 <key>label</key>
                 <string>Common Options</string>
+                <key>pl_filter</key>
+                <dict>
+                    <key>CoreFoundationVersion</key>
+                    <array>
+                        <string>847.20</string>
+                        <string>1240.10</string>
+                    </array>
+                </dict>
             </dict>
             <dict>
                 <key>cell</key>
@@ -71,6 +79,7 @@
                     <key>CoreFoundationVersion</key>
                     <array>
                         <string>847.20</string>
+                        <string>1240.10</string>
                     </array>
                 </dict>
             </dict>
