@@ -377,7 +377,7 @@ static BOOL IsForSelectionModeString(NSString * string)
     if ([keyboardImpl respondsToSelector:@selector(callLayoutIsShiftKeyBeingHeld)] && !isSelectionMode)
         isSelectionMode = [keyboardImpl callLayoutIsShiftKeyBeingHeld];
 
-    if (gesture.state == UIGestureRecognizerStateEnded || gesture.state == UIGestureRecognizerStateCancelled) {
+    if (gesture.state == UIGestureRecognizerStateEnded || gesture.state == UIGestureRecognizerStateCancelled) { // {{{
         // cleanup
         numberOfTouches = 0;
         previousVelocityPoint = CGPointMake(0,0);
@@ -407,7 +407,8 @@ static BOOL IsForSelectionModeString(NSString * string)
         // fix text deletion issue during Korean syllable composing
         [webView endSelectionChange];
 
-    } else if (gesture.state == UIGestureRecognizerStateBegan) {
+    } // }}}
+    else if (gesture.state == UIGestureRecognizerStateBegan) { // {{{
 
         beginningStartPosition = [webView.selectedTextRange.start retain];
         beginningEndPosition = [webView.selectedTextRange.end retain];
@@ -416,7 +417,8 @@ static BOOL IsForSelectionModeString(NSString * string)
         // fix text deletion issue during Korean syllable composing
         [webView beginSelectionChange];
 
-    } else if (gesture.state == UIGestureRecognizerStateChanged) {
+    } // }}}
+    else if (gesture.state == UIGestureRecognizerStateChanged) { // {{{
 
         CGPoint offset = [gesture translationInView:tv];
         if (!hasStarted && fabs(offset.x) < 16.0)
@@ -520,7 +522,7 @@ static BOOL IsForSelectionModeString(NSString * string)
                 [editor scrollSelectionToVisible:YES];
             }
         }
-    }
+    } // }}}
 }
 %end
 // }}}
