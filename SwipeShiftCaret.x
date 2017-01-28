@@ -123,7 +123,7 @@ static BOOL isPreventSwipeLoupe;
 
 - (BOOL)canPreventGestureRecognizer:(UIGestureRecognizer *)gesture
 {
-    CMLog(@"%@", gesture);
+    HBLogDebug(@"%@", gesture);
     // Prevent duplicated myself
     if ([gesture isMemberOfClass:[SCPanGestureRecognizer class]])
         return YES;
@@ -316,13 +316,13 @@ static BOOL IsForSelectionModeString(NSString * string)
             else if ([self respondsToSelector:@selector(webView)])
                 webView = [tv webView];
         }
-        CMLog(@"firstResponder class = %@", NSStringFromClass([self class]));
-        CMLog(@"tv = %@, webView = %@", tv, webView);
+        HBLogDebug(@"firstResponder class = %@", NSStringFromClass([self class]));
+        HBLogDebug(@"tv = %@, webView = %@", tv, webView);
         if (panGestureEnabled)
             InstallPanGestureRecognizer();
         else
             InstallSwipeGestureRecognizer();
-        CMLog(@"gestureRecognizers = %@", [self gestureRecognizers]);
+        HBLogDebug(@"gestureRecognizers = %@", [self gestureRecognizers]);
     }
     return tmp;
 }
