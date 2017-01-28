@@ -58,7 +58,8 @@
 
 @interface UIFieldEditor : NSObject
 + (id)sharedFieldEditor;
-- (void)revealSelection;
+- (void)revealSelection; // iOS ~9
+- (void)scrollSelectionToVisible:(BOOL)arg1; // iOS 4+
 @end
 
 @interface UIKeyboardLayoutStar : NSObject
@@ -232,8 +233,13 @@ static void ShiftCaretToLeft(BOOL isLeftSwipe)
         [webView endSelectionChange];
     }
 
-    // reveal for UITextField.
-    [[%c(UIFieldEditor) sharedFieldEditor] revealSelection];
+    // reveal for UITextField iOS ~9.
+    UIFieldEditor *editor = [%c(UIFieldEditor) sharedFieldEditor];
+    if ([editor respondsToSelector:@selector(revealSelection)]) {
+        [editor revealSelection];
+    } else {
+        [editor scrollSelectionToVisible:YES];
+    }
     // reveal for UITextView, UITextContentView and UIWebDocumentView.
     if ([tv respondsToSelector:@selector(scrollSelectionToVisible:)])
         [tv scrollSelectionToVisible:YES];
@@ -506,7 +512,13 @@ static BOOL IsForSelectionModeString(NSString * string)
             }
             UpdateCaretAndCandidateIfNecessary(range);
             // reveal for UITextField.
-            [[%c(UIFieldEditor) sharedFieldEditor] revealSelection];
+            UIFieldEditor *editor = [%c(UIFieldEditor) sharedFieldEditor];
+            if ([editor respondsToSelector:@selector(revealSelection)]) {
+                // iOS ~9
+                [editor revealSelection];
+            } else {
+                [editor scrollSelectionToVisible:YES];
+            }
         }
     }
 }
