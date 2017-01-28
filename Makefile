@@ -5,6 +5,7 @@ include $(THEOS)/makefiles/common.mk
 TWEAK_NAME = SwipeShiftCaret
 SwipeShiftCaret_FILES = SwipeShiftCaret.x
 SwipeShiftCaret_FRAMEWORKS = UIKit
+SwipeShiftCaret_USE_SUBSTRATE = 0
 SwipeShiftCaret_LOGOSFLAGS = -c generator=internal
 SwipeShiftCaret_LDFLAGS = -Wl,-segalign,4000
 # ADDITIONAL_CFLAGS = -DDEBUG

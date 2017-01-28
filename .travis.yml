@@ -5,7 +5,7 @@ env:
 
 before_install:
   - brew update
-  - brew install dpkg
+  - brew install dpkg ldid
   - curl -s -f -L https://raw.github.com/r-plus/dotfiles/master/install_theos.sh | bash
   - pwd
   - ls
