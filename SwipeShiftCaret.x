@@ -529,7 +529,19 @@ static BOOL IsForSelectionModeString(NSString * string)
 
 static void LoadSettings()
 {
-    NSDictionary *dict = [NSDictionary dictionaryWithContentsOfFile:PREF_PATH];
+    NSDictionary *dict;
+    if (kCFCoreFoundationVersionNumber < kCFCoreFoundationVersionNumber_iOS_8_0) {
+        dict = [NSDictionary dictionaryWithContentsOfFile:PREF_PATH];
+    } else {
+        CFStringRef appID = CFSTR("jp.r-plus.SwipeShiftCaret");
+        CFArrayRef keyList = CFPreferencesCopyKeyList(appID, kCFPreferencesCurrentUser, kCFPreferencesAnyHost);
+        if (keyList) {
+            dict = [(NSDictionary *)CFPreferencesCopyMultiple(keyList, appID, kCFPreferencesCurrentUser, kCFPreferencesAnyHost) autorelease];
+            CFRelease(keyList);
+        } else {
+            dict = [NSDictionary dictionaryWithContentsOfFile:PREF_PATH];
+        }
+    }
     id panGesturePref = [dict objectForKey:@"PanGestureEnabled"];
     panGestureEnabled = panGesturePref ? [panGesturePref boolValue] : YES;
     id velocityPref = [dict objectForKey:@"VelocityEnabled"];
