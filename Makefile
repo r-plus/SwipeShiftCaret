@@ -1,5 +1,5 @@
 TARGET = iphone:clang::4.0
-ARCHS = armv7 arm64
+ARCHS = armv7 arm64 arm64e
 include $(THEOS)/makefiles/common.mk
 
 TWEAK_NAME = SwipeShiftCaret
