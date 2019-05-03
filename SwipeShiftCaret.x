@@ -62,6 +62,10 @@
 - (void)scrollSelectionToVisible:(BOOL)arg1; // iOS 4+
 @end
 
+@interface UIKBKey : NSObject
+@property(copy, nonatomic) NSString *displayString;
+@end
+
 @interface UIKeyboardLayoutStar : NSObject
 - (UIKBKey *)keyHitTest:(CGPoint)arg;
 - (NSString *)displayString;
