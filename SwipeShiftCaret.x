@@ -1,4 +1,4 @@
-#import <ColorLog.h>
+#import <DLog.h>
 #import <Firmware.h>
 #import <UIKit/UIKit.h>
 #import <UIKit/UIGestureRecognizerSubclass.h>
@@ -127,7 +127,7 @@ static BOOL isPreventSwipeLoupe;
 
 - (BOOL)canPreventGestureRecognizer:(UIGestureRecognizer *)gesture
 {
-    HBLogDebug(@"%@", gesture);
+    DLog(@"%@", gesture);
     // Prevent duplicated myself
     if ([gesture isMemberOfClass:[SCPanGestureRecognizer class]])
         return YES;
@@ -320,13 +320,13 @@ static BOOL IsForSelectionModeString(NSString * string)
             else if ([self respondsToSelector:@selector(webView)])
                 webView = [tv webView];
         }
-        HBLogDebug(@"firstResponder class = %@", NSStringFromClass([self class]));
-        HBLogDebug(@"tv = %@, webView = %@", tv, webView);
+        DLog(@"firstResponder class = %@", NSStringFromClass([self class]));
+        DLog(@"tv = %@, webView = %@", tv, webView);
         if (panGestureEnabled)
             InstallPanGestureRecognizer();
         else
             InstallSwipeGestureRecognizer();
-        HBLogDebug(@"gestureRecognizers = %@", [self gestureRecognizers]);
+        DLog(@"gestureRecognizers = %@", [self gestureRecognizers]);
     }
     return tmp;
 }
@@ -407,7 +407,7 @@ static BOOL IsForSelectionModeString(NSString * string)
             if (range && !range.isEmpty)
                 PopupMenuFromRect([webView firstRectForRange:range]);
         }
-        
+
         // fix text deletion issue during Korean syllable composing
         [webView endSelectionChange];
 
@@ -417,7 +417,7 @@ static BOOL IsForSelectionModeString(NSString * string)
         beginningStartPosition = [webView.selectedTextRange.start retain];
         beginningEndPosition = [webView.selectedTextRange.end retain];
         beginningRangeIsEmpty = [webView comparePosition:beginningStartPosition toPosition:beginningEndPosition] == NSOrderedSame;
-        
+
         // fix text deletion issue during Korean syllable composing
         [webView beginSelectionChange];
 
