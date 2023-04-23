@@ -1,5 +1,15 @@
-TARGET = iphone:clang::4.0
-ARCHS = armv7 arm64 arm64e
+ifeq ($(ROOTLESS),1)
+	THEOS_PACKAGE_SCHEME = rootless
+endif
+
+ifeq ($(THEOS_PACKAGE_SCHEME),rootless)
+	ARCHS = arm64 arm64e
+	TARGET = iphone:clang:14.4:15.0
+else
+	TARGET = iphone:clang::5.0
+	ARCHS = armv7 arm64 arm64e
+endif
+
 include $(THEOS)/makefiles/common.mk
 
 TWEAK_NAME = SwipeShiftCaret
