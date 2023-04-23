@@ -252,8 +252,12 @@ static void ShiftCaretToLeft(BOOL isLeftSwipe)
 static void PopupMenuFromRect(CGRect rect)
 {
     UIMenuController *mc = [UIMenuController sharedMenuController];
-    [mc setTargetRect:rect inView:tv];
-    [mc setMenuVisible:YES animated:YES];
+    if (@available(iOS 13.0, *)) {
+        [mc showMenuFromView:tv rect:rect];
+    } else {
+        [mc setTargetRect:rect inView:tv];
+        [mc setMenuVisible:YES animated:YES];
+    }
 }
 // }}}
 
