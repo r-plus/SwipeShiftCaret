@@ -255,8 +255,10 @@ static void PopupMenuFromRect(CGRect rect)
     if (@available(iOS 13.0, *)) {
         [mc showMenuFromView:tv rect:rect];
     } else {
+        #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
         [mc setTargetRect:rect inView:tv];
         [mc setMenuVisible:YES animated:YES];
+        #pragma GCC diagnostic warning "-Wdeprecated-declarations"
     }
 }
 // }}}
