@@ -1,9 +1,10 @@
+#import <rootless.h>
 #import <DLog.h>
 #import <Firmware.h>
 #import <UIKit/UIKit.h>
 #import <UIKit/UIGestureRecognizerSubclass.h>
 
-#define PREF_PATH @"/var/mobile/Library/Preferences/jp.r-plus.SwipeShiftCaret.plist"
+#define PREF_PATH ROOT_PATH_NS(@"/var/mobile/Library/Preferences/jp.r-plus.SwipeShiftCaret.plist")
 
 // interfaces {{{
 @interface WKContentView
